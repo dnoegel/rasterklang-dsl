@@ -1,0 +1,401 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "TempoStmt",
+        "line": 2,
+        "unit": "bpm",
+        "value": {
+          "kind": "number",
+          "value": 120
+        },
+        "beats": 4,
+        "offset": null,
+        "meter": null
+      },
+      {
+        "type": "PatternDecl",
+        "line": 5,
+        "name": "hook",
+        "length": null,
+        "each": null,
+        "elements": null,
+        "source": "c4!3 e4!2 g4",
+        "docStart": 184,
+        "docEnd": 196
+      },
+      {
+        "type": "InstrumentBlock",
+        "line": 8,
+        "name": "bass",
+        "fields": [
+          {
+            "type": "wave",
+            "line": 9,
+            "tokens": [
+              "pulse"
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "adsr",
+            "line": 10,
+            "a": 0,
+            "d": 4,
+            "s": 10,
+            "r": 4
+          },
+          {
+            "type": "pw",
+            "line": 11,
+            "tokens": [
+              1536
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "vib",
+            "line": 12,
+            "depth": 0.15,
+            "rate": 5
+          },
+          {
+            "type": "gate",
+            "line": 13,
+            "value": 0.85
+          }
+        ]
+      },
+      {
+        "type": "InstrumentBlock",
+        "line": 16,
+        "name": "lead",
+        "fields": [
+          {
+            "type": "wave",
+            "line": 17,
+            "tokens": [
+              "triangle",
+              "pulse",
+              "triangle",
+              "noise"
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "arp",
+            "line": 18,
+            "tokens": [
+              0,
+              4,
+              7,
+              12
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "pw",
+            "line": 19,
+            "tokens": [
+              2048,
+              2400,
+              2800,
+              3200,
+              2800,
+              2400
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "filterTable",
+            "line": 20,
+            "tokens": [
+              0,
+              20,
+              40,
+              60,
+              40,
+              20
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "adsr",
+            "line": 21,
+            "a": 0,
+            "d": 9,
+            "s": 0,
+            "r": 0
+          },
+          {
+            "type": "loop",
+            "line": 22,
+            "value": 2
+          },
+          {
+            "type": "slide",
+            "line": 23,
+            "time": 0.08
+          }
+        ]
+      },
+      {
+        "type": "InstrumentBlock",
+        "line": 26,
+        "name": "perc",
+        "fields": [
+          {
+            "type": "wave",
+            "line": 27,
+            "tokens": [
+              "noise"
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "adsr",
+            "line": 28,
+            "a": 0,
+            "d": 2,
+            "s": 0,
+            "r": 2
+          },
+          {
+            "type": "test",
+            "line": 29,
+            "tokens": [
+              1,
+              0,
+              0,
+              0
+            ],
+            "speed": null,
+            "delay": null
+          }
+        ]
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "extended",
+        "line": 33,
+        "index": 0,
+        "instrumentName": "bass",
+        "fields": [
+          {
+            "type": "notes",
+            "line": 34,
+            "isSigil": false,
+            "source": "c2!3 e2!2 g1 <c2 f2>",
+            "docStart": 707,
+            "docEnd": 727
+          },
+          {
+            "type": "pipeline",
+            "line": 35,
+            "transforms": [
+              {
+                "type": "every",
+                "line": 35,
+                "n": {
+                  "value": 4
+                },
+                "fn": {
+                  "type": "rev",
+                  "line": 35
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "extended",
+        "line": 38,
+        "index": 1,
+        "instrumentName": "lead",
+        "fields": [
+          {
+            "type": "notes",
+            "line": 39,
+            "isSigil": true,
+            "sigilName": "hook"
+          },
+          {
+            "type": "pipeline",
+            "line": 40,
+            "transforms": [
+              {
+                "type": "every",
+                "line": 40,
+                "n": {
+                  "value": 4
+                },
+                "fn": {
+                  "type": "rev",
+                  "line": 40
+                }
+              }
+            ]
+          },
+          {
+            "type": "pipeline",
+            "line": 41,
+            "transforms": [
+              {
+                "type": "degradeBy",
+                "line": 41,
+                "p": {
+                  "value": 0.1
+                }
+              }
+            ]
+          },
+          {
+            "type": "pipeline",
+            "line": 42,
+            "transforms": [
+              {
+                "type": "sometimesBy",
+                "line": 42,
+                "p": {
+                  "value": 0.3
+                },
+                "fn": {
+                  "type": "ply",
+                  "line": 42,
+                  "n": {
+                    "value": 2
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "extended",
+        "line": 45,
+        "index": 2,
+        "instrumentName": "perc",
+        "fields": [
+          {
+            "type": "notes",
+            "line": 46,
+            "isSigil": false,
+            "source": "x(5,8,2)",
+            "docStart": 870,
+            "docEnd": 878
+          }
+        ]
+      },
+      {
+        "type": "FilterBlock",
+        "line": 50,
+        "fields": [
+          {
+            "type": "cutoff",
+            "line": 51,
+            "expr": {
+              "type": "SwitchBlock",
+              "line": 51,
+              "cases": [
+                {
+                  "line": 52,
+                  "cond": {
+                    "op": "<",
+                    "value": 3
+                  },
+                  "value": {
+                    "type": "SignalExpr",
+                    "line": 52,
+                    "signal": "saw",
+                    "range": {
+                      "lo": 160,
+                      "hi": 0
+                    },
+                    "speeds": [
+                      {
+                        "op": "/",
+                        "value": 3
+                      }
+                    ]
+                  }
+                },
+                {
+                  "line": 53,
+                  "cond": {
+                    "op": "else"
+                  },
+                  "value": {
+                    "type": "SignalExpr",
+                    "line": 53,
+                    "signal": "saw",
+                    "range": {
+                      "lo": 2047,
+                      "hi": 1440
+                    },
+                    "speeds": [
+                      {
+                        "op": "/",
+                        "value": 9
+                      },
+                      {
+                        "op": ">>",
+                        "value": 3
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "resonance",
+            "line": 54,
+            "expr": {
+              "type": "NumberListExpr",
+              "line": 54,
+              "values": [
+                15
+              ]
+            }
+          },
+          {
+            "type": "mode",
+            "line": 55,
+            "expr": {
+              "type": "SignalExpr",
+              "line": 55,
+              "signal": "bandpass",
+              "range": null,
+              "speeds": []
+            }
+          },
+          {
+            "type": "route",
+            "line": 56,
+            "expr": {
+              "type": "NumberListExpr",
+              "line": 56,
+              "values": [
+                1,
+                2
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "PatternDecl",
+        "line": 1,
+        "name": "hook",
+        "length": null,
+        "each": null,
+        "elements": null,
+        "source": "a\"b\\c",
+        "docStart": 16,
+        "docEnd": 23
+      }
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "ok": false,
+  "line": 2,
+  "message": "line 2: 'slide' can't use the verb-block form (only wave/arp/pw/filterTable/test/gate can)"
+}

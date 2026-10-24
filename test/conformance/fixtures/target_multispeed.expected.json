@@ -1,0 +1,43 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "TargetStmt",
+        "line": 3,
+        "video": "PAL",
+        "driveCycles": null,
+        "multispeed": 3
+      },
+      {
+        "type": "TempoStmt",
+        "line": 4,
+        "unit": "bpm",
+        "value": {
+          "kind": "number",
+          "value": 120
+        },
+        "beats": 4,
+        "offset": null,
+        "meter": null
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 5,
+        "index": 0,
+        "instrumentName": null,
+        "notes": {
+          "isSigil": false,
+          "source": "c4 e4 g4 c5",
+          "docStart": 188,
+          "docEnd": 199
+        },
+        "arrangement": null,
+        "inlineAttrs": [],
+        "transforms": []
+      }
+    ]
+  }
+}

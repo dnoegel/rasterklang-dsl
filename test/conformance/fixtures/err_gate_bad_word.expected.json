@@ -1,0 +1,5 @@
+{
+  "ok": false,
+  "line": 3,
+  "message": "line 3: 'gate' expects a number, or one of legato/retrigger, found 'bogus'"
+}

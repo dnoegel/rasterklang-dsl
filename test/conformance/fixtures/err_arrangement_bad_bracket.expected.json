@@ -1,0 +1,5 @@
+{
+  "ok": false,
+  "line": 3,
+  "message": "line 3: expected '=' after pattern name 'verse' (optionally preceded by the pattern's declared length in beats, e.g. `pattern verse 4 = \"...\"`)"
+}

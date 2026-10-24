@@ -1,0 +1,63 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "TableDecl",
+        "line": 1,
+        "name": "sweep",
+        "tokens": [
+          {
+            "gen": "ramp",
+            "line": 1,
+            "from": 1088,
+            "to": 0,
+            "step": -48,
+            "over": 128,
+            "shape": null
+          }
+        ]
+      },
+      {
+        "type": "InstrumentBlock",
+        "line": 3,
+        "name": "lead",
+        "fields": [
+          {
+            "type": "pw",
+            "line": 4,
+            "tokens": [
+              {
+                "ref": "sweep"
+              },
+              {
+                "repeat": 2048,
+                "count": 104
+              }
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "filterTable",
+            "line": 5,
+            "tokens": [
+              {
+                "gen": "ramp",
+                "line": 5,
+                "from": 0,
+                "to": 40,
+                "step": null,
+                "over": 8,
+                "shape": null
+              }
+            ],
+            "speed": null,
+            "delay": null
+          }
+        ]
+      }
+    ]
+  }
+}

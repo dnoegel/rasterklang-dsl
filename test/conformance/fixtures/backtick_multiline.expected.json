@@ -1,0 +1,58 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 1,
+        "index": 0,
+        "instrumentName": null,
+        "notes": {
+          "isSigil": false,
+          "source": "c3 ~ g2 ~\n  a2 ~ f2 ~",
+          "docStart": 9,
+          "docEnd": 30
+        },
+        "arrangement": null,
+        "inlineAttrs": [
+          {
+            "name": "wave",
+            "values": [
+              "pulse"
+            ]
+          },
+          {
+            "name": "adsr",
+            "values": [
+              0,
+              6,
+              12,
+              6
+            ]
+          },
+          {
+            "name": "pw",
+            "values": [
+              1024
+            ]
+          }
+        ],
+        "transforms": [
+          {
+            "type": "every",
+            "line": 6,
+            "n": {
+              "value": 4
+            },
+            "fn": {
+              "type": "rev",
+              "line": 6
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

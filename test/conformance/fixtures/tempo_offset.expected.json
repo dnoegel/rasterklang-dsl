@@ -1,0 +1,52 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "TempoStmt",
+        "line": 5,
+        "unit": "bpm",
+        "value": {
+          "kind": "number",
+          "value": 125
+        },
+        "beats": 16,
+        "offset": 1,
+        "meter": null
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 6,
+        "index": 0,
+        "instrumentName": null,
+        "notes": {
+          "isSigil": false,
+          "source": "c4 e4 g4 c5",
+          "docStart": 282,
+          "docEnd": 293
+        },
+        "arrangement": null,
+        "inlineAttrs": [],
+        "transforms": []
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 7,
+        "index": 1,
+        "instrumentName": null,
+        "notes": {
+          "isSigil": false,
+          "source": "c2!4",
+          "docStart": 304,
+          "docEnd": 308
+        },
+        "arrangement": null,
+        "inlineAttrs": [],
+        "transforms": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "ok": false,
+  "line": 1,
+  "message": "line 1: a tempo statement cannot combine 'meter' and 'beats' - 'beats' is deprecated in favor of 'meter N/4', use one or the other"
+}

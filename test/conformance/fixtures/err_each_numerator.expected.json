@@ -1,0 +1,5 @@
+{
+  "ok": false,
+  "line": 2,
+  "message": "line 2: 'each' takes a fraction with numerator 1 (e.g. 'each 1/16'), got 3/16"
+}

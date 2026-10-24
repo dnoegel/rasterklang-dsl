@@ -1,0 +1,24 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 1,
+        "index": 0,
+        "instrumentName": null,
+        "notes": {
+          "isSigil": false,
+          "source": "c4!3 e4!2 g4",
+          "docStart": 9,
+          "docEnd": 21
+        },
+        "arrangement": null,
+        "inlineAttrs": [],
+        "transforms": []
+      }
+    ]
+  }
+}

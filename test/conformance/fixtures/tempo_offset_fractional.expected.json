@@ -1,0 +1,36 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "TempoStmt",
+        "line": 2,
+        "unit": "bpm",
+        "value": {
+          "kind": "pattern",
+          "source": "<125 100>"
+        },
+        "beats": 8,
+        "offset": -0.5,
+        "meter": null
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 3,
+        "index": 0,
+        "instrumentName": null,
+        "notes": {
+          "isSigil": false,
+          "source": "c4 e4",
+          "docStart": 114,
+          "docEnd": 119
+        },
+        "arrangement": null,
+        "inlineAttrs": [],
+        "transforms": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,326 @@
+[
+  {
+    "source": "c4 ~ c4 ~",
+    "ok": true,
+    "contentBeats": 4,
+    "candidates": [
+      {
+        "beats": 4,
+        "what": "contents"
+      }
+    ],
+    "expanded": "c4 ~ c4 ~"
+  },
+  {
+    "source": "c4@4 ~@4",
+    "ok": true,
+    "contentBeats": 8,
+    "candidates": [
+      {
+        "beats": 8,
+        "what": "contents"
+      }
+    ],
+    "expanded": "c4@4 ~@4"
+  },
+  {
+    "source": "c4 _ _ _",
+    "ok": true,
+    "contentBeats": 4,
+    "candidates": [
+      {
+        "beats": 4,
+        "what": "contents"
+      }
+    ],
+    "expanded": "c4@4"
+  },
+  {
+    "source": "c4 _ ~ _",
+    "ok": true,
+    "contentBeats": 4,
+    "candidates": [
+      {
+        "beats": 4,
+        "what": "contents"
+      }
+    ],
+    "expanded": "c4@2 ~@2"
+  },
+  {
+    "source": "c4@2 _ e4",
+    "ok": true,
+    "contentBeats": 4,
+    "candidates": [
+      {
+        "beats": 4,
+        "what": "contents"
+      }
+    ],
+    "expanded": "c4@3 e4"
+  },
+  {
+    "source": "c4!3 _ e4",
+    "ok": true,
+    "contentBeats": 5,
+    "candidates": [
+      {
+        "beats": 5,
+        "what": "contents"
+      }
+    ],
+    "expanded": "c4 c4 c4@2 e4"
+  },
+  {
+    "source": "bd*4 sn",
+    "ok": true,
+    "contentBeats": 2,
+    "candidates": [
+      {
+        "beats": 2,
+        "what": "contents"
+      }
+    ],
+    "expanded": "bd*4 sn"
+  },
+  {
+    "source": "c4 [e4 g4] c5",
+    "ok": true,
+    "contentBeats": 3,
+    "candidates": [
+      {
+        "beats": 3,
+        "what": "contents"
+      }
+    ],
+    "expanded": "c4 [e4 g4] c5"
+  },
+  {
+    "source": "c4 [e4 _ _] c5",
+    "ok": true,
+    "contentBeats": 3,
+    "candidates": [
+      {
+        "beats": 3,
+        "what": "contents"
+      }
+    ],
+    "expanded": "c4 [e4@3] c5"
+  },
+  {
+    "source": "[c4 e4, g4 b4]",
+    "ok": true,
+    "contentBeats": 1,
+    "candidates": [
+      {
+        "beats": 1,
+        "what": "contents"
+      }
+    ],
+    "expanded": "[c4 e4, g4 b4]"
+  },
+  {
+    "source": "<c4 e4 g4>",
+    "ok": true,
+    "contentBeats": 1,
+    "candidates": [
+      {
+        "beats": 1,
+        "what": "orderlist element 1"
+      },
+      {
+        "beats": 1,
+        "what": "orderlist element 2"
+      },
+      {
+        "beats": 1,
+        "what": "orderlist element 3"
+      }
+    ],
+    "expanded": "<c4 e4 g4>"
+  },
+  {
+    "source": "<[c4 c4 c4 c4] [e4 e4 e4 e4]>",
+    "ok": true,
+    "contentBeats": 1,
+    "candidates": [
+      {
+        "beats": 4,
+        "what": "orderlist element 1"
+      },
+      {
+        "beats": 4,
+        "what": "orderlist element 2"
+      }
+    ],
+    "expanded": "<[c4 c4 c4 c4] [e4 e4 e4 e4]>"
+  },
+  {
+    "source": "c4@0.25 d4@0.25 e4@0.5",
+    "ok": true,
+    "contentBeats": 1,
+    "candidates": [
+      {
+        "beats": 1,
+        "what": "contents"
+      }
+    ],
+    "expanded": "c4@0.25 d4@0.25 e4@0.5"
+  },
+  {
+    "source": "c4 e4|g4 c5",
+    "ok": true,
+    "contentBeats": 3,
+    "candidates": [
+      {
+        "beats": 3,
+        "what": "contents"
+      }
+    ],
+    "expanded": "c4 e4|g4 c5"
+  },
+  {
+    "source": "c4(3,8) e4",
+    "ok": true,
+    "contentBeats": 2,
+    "candidates": [
+      {
+        "beats": 2,
+        "what": "contents"
+      }
+    ],
+    "expanded": "c4(3,8) e4"
+  },
+  {
+    "source": "c4?0.3 e4!2",
+    "ok": true,
+    "contentBeats": 3,
+    "candidates": [
+      {
+        "beats": 3,
+        "what": "contents"
+      }
+    ],
+    "expanded": "c4?0.3 e4!2"
+  },
+  {
+    "source": "c4 ~!7",
+    "ok": true,
+    "contentBeats": 8,
+    "candidates": [
+      {
+        "beats": 8,
+        "what": "contents"
+      }
+    ],
+    "expanded": "c4 ~!7"
+  },
+  {
+    "source": "{c4 e4 g4}",
+    "ok": true,
+    "contentBeats": 1,
+    "candidates": [
+      {
+        "beats": 1,
+        "what": "contents"
+      }
+    ],
+    "expanded": "{c4 e4 g4}"
+  },
+  {
+    "source": "_ c4",
+    "ok": false
+  },
+  {
+    "source": "c4 [_ e4]",
+    "ok": false
+  },
+  {
+    "source": "c4/4 d4/8 e4/8 f4/2",
+    "ok": true,
+    "contentBeats": 4,
+    "candidates": [
+      {
+        "beats": 4,
+        "what": "contents"
+      }
+    ],
+    "expanded": "c4/4 d4/8 e4/8 f4/2"
+  },
+  {
+    "source": "c4/4.",
+    "ok": true,
+    "contentBeats": 1.5,
+    "candidates": [
+      {
+        "beats": 1.5,
+        "what": "contents"
+      }
+    ],
+    "expanded": "c4/4."
+  },
+  {
+    "source": "c4/4t",
+    "ok": true,
+    "contentBeats": 0.6666666666666666,
+    "candidates": [
+      {
+        "beats": 0.6666666666666666,
+        "what": "contents"
+      }
+    ],
+    "expanded": "c4/4t"
+  },
+  {
+    "source": "c4/4 _/4",
+    "ok": true,
+    "contentBeats": 2,
+    "candidates": [
+      {
+        "beats": 2,
+        "what": "contents"
+      }
+    ],
+    "expanded": "c4@2"
+  },
+  {
+    "source": "~/8 c4/8",
+    "ok": true,
+    "contentBeats": 1,
+    "candidates": [
+      {
+        "beats": 1,
+        "what": "contents"
+      }
+    ],
+    "expanded": "~/8 c4/8"
+  },
+  {
+    "source": "c4/16",
+    "ok": true,
+    "contentBeats": 0.25,
+    "candidates": [
+      {
+        "beats": 0.25,
+        "what": "contents"
+      }
+    ],
+    "expanded": "c4/16"
+  },
+  {
+    "source": "[c4/4 e4/4] g4/2",
+    "ok": true,
+    "contentBeats": 3,
+    "candidates": [
+      {
+        "beats": 3,
+        "what": "contents"
+      }
+    ],
+    "expanded": "[c4/4 e4/4] g4/2"
+  },
+  {
+    "source": "c4/4 d4@0.5",
+    "ok": false
+  }
+]

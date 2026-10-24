@@ -1,0 +1,105 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "FilterBlock",
+        "line": 1,
+        "fields": [
+          {
+            "type": "cutoff",
+            "line": 2,
+            "expr": {
+              "type": "SwitchBlock",
+              "line": 2,
+              "cases": [
+                {
+                  "line": 3,
+                  "cond": {
+                    "op": "<",
+                    "value": 3
+                  },
+                  "value": {
+                    "type": "SignalExpr",
+                    "line": 3,
+                    "signal": "saw",
+                    "range": {
+                      "lo": 160,
+                      "hi": 0
+                    },
+                    "speeds": [
+                      {
+                        "op": "/",
+                        "value": 3
+                      }
+                    ]
+                  }
+                },
+                {
+                  "line": 4,
+                  "cond": {
+                    "op": "else"
+                  },
+                  "value": {
+                    "type": "SignalExpr",
+                    "line": 4,
+                    "signal": "saw",
+                    "range": {
+                      "lo": 2047,
+                      "hi": 1440
+                    },
+                    "speeds": [
+                      {
+                        "op": "/",
+                        "value": 9
+                      },
+                      {
+                        "op": ">>",
+                        "value": 3
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "resonance",
+            "line": 5,
+            "expr": {
+              "type": "NumberListExpr",
+              "line": 5,
+              "values": [
+                15
+              ]
+            }
+          },
+          {
+            "type": "mode",
+            "line": 6,
+            "expr": {
+              "type": "SignalExpr",
+              "line": 6,
+              "signal": "bandpass",
+              "range": null,
+              "speeds": []
+            }
+          },
+          {
+            "type": "route",
+            "line": 7,
+            "expr": {
+              "type": "NumberListExpr",
+              "line": 7,
+              "values": [
+                1,
+                2
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

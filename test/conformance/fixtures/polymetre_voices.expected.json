@@ -1,0 +1,95 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "TempoStmt",
+        "line": 3,
+        "unit": "bpm",
+        "value": {
+          "kind": "number",
+          "value": 120
+        },
+        "beats": 4,
+        "offset": null,
+        "meter": null
+      },
+      {
+        "type": "PatternDecl",
+        "line": 4,
+        "name": "a",
+        "length": 4,
+        "each": null,
+        "elements": null,
+        "source": "c2 ~ c2 ~",
+        "docStart": 181,
+        "docEnd": 190
+      },
+      {
+        "type": "PatternDecl",
+        "line": 5,
+        "name": "b",
+        "length": 3,
+        "each": null,
+        "elements": null,
+        "source": "e3 f3 g3",
+        "docStart": 207,
+        "docEnd": 215
+      },
+      {
+        "type": "PatternDecl",
+        "line": 6,
+        "name": "c",
+        "length": 8,
+        "each": null,
+        "elements": null,
+        "source": "c5@4 g5@4",
+        "docStart": 232,
+        "docEnd": 241
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 7,
+        "index": 0,
+        "instrumentName": null,
+        "notes": {
+          "isSigil": true,
+          "sigilName": "a"
+        },
+        "arrangement": null,
+        "inlineAttrs": [],
+        "transforms": []
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 8,
+        "index": 1,
+        "instrumentName": null,
+        "notes": {
+          "isSigil": true,
+          "sigilName": "b"
+        },
+        "arrangement": null,
+        "inlineAttrs": [],
+        "transforms": []
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 9,
+        "index": 2,
+        "instrumentName": null,
+        "notes": {
+          "isSigil": true,
+          "sigilName": "c"
+        },
+        "arrangement": null,
+        "inlineAttrs": [],
+        "transforms": []
+      }
+    ]
+  }
+}

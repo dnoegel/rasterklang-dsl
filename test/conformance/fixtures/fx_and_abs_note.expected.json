@@ -1,0 +1,177 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "TempoStmt",
+        "line": 4,
+        "unit": "bpm",
+        "value": {
+          "kind": "number",
+          "value": 125
+        },
+        "beats": 4,
+        "offset": null,
+        "meter": null
+      },
+      {
+        "type": "TableDecl",
+        "line": 6,
+        "name": "drumPitches",
+        "tokens": [
+          {
+            "absNote": 36
+          },
+          {
+            "repeat": {
+              "absNote": 43
+            },
+            "count": 2
+          },
+          0
+        ]
+      },
+      {
+        "type": "InstrumentBlock",
+        "line": 8,
+        "name": "kick",
+        "fields": [
+          {
+            "type": "wave",
+            "line": 9,
+            "tokens": [
+              "noise",
+              {
+                "repeat": "pulse",
+                "count": 2
+              }
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "arp",
+            "line": 10,
+            "tokens": [
+              {
+                "ref": "drumPitches"
+              }
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "adsr",
+            "line": 11,
+            "a": 0,
+            "d": 8,
+            "s": 0,
+            "r": 0
+          },
+          {
+            "type": "loop",
+            "line": 12,
+            "pairs": [
+              {
+                "table": "arp",
+                "value": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "InstrumentBlock",
+        "line": 15,
+        "name": "lead",
+        "fields": [
+          {
+            "type": "wave",
+            "line": 16,
+            "tokens": [
+              "pulse"
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "arp",
+            "line": 17,
+            "tokens": [
+              0,
+              4,
+              7
+            ],
+            "speed": null,
+            "delay": null
+          }
+        ]
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 20,
+        "index": 0,
+        "instrumentName": "kick",
+        "notes": {
+          "isSigil": false,
+          "source": "c2 ~ c2 c2",
+          "docStart": 378,
+          "docEnd": 388
+        },
+        "arrangement": null,
+        "inlineAttrs": [],
+        "transforms": []
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 21,
+        "index": 1,
+        "instrumentName": "lead",
+        "notes": {
+          "isSigil": false,
+          "source": "c4 e4 g4 c5",
+          "docStart": 404,
+          "docEnd": 415
+        },
+        "arrangement": null,
+        "inlineAttrs": [
+          {
+            "name": "fx",
+            "isPattern": true,
+            "source": "~ tp.24 vib.16.100 ad.0.10",
+            "docStart": 421,
+            "docEnd": 447
+          }
+        ],
+        "transforms": []
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "extended",
+        "line": 23,
+        "index": 2,
+        "instrumentName": null,
+        "fields": [
+          {
+            "type": "notes",
+            "line": 24,
+            "isSigil": false,
+            "source": "c3 ~ g3 ~",
+            "docStart": 467,
+            "docEnd": 476
+          },
+          {
+            "type": "fx",
+            "line": 25,
+            "source": "pup.128 ~ pdn.s3 sr.4.4",
+            "docStart": 484,
+            "docEnd": 507
+          }
+        ]
+      }
+    ]
+  }
+}

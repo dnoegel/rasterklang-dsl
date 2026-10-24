@@ -1,0 +1,5 @@
+{
+  "ok": false,
+  "line": 1,
+  "message": "line 1: expected 'video', 'driveCycles' or 'multispeed' in a target block, found 'cpu_clock'"
+}

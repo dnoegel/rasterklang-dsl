@@ -1,0 +1,75 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "TempoStmt",
+        "line": 2,
+        "unit": "bpm",
+        "value": {
+          "kind": "number",
+          "value": 120
+        },
+        "beats": null,
+        "offset": null,
+        "meter": {
+          "numerator": 4,
+          "denominator": 4
+        }
+      },
+      {
+        "type": "PatternDecl",
+        "line": 3,
+        "name": "hats",
+        "length": null,
+        "each": {
+          "numerator": 1,
+          "denominator": 16
+        },
+        "elements": null,
+        "source": "c6 d6 e6 f6 g6 a6 b6 c7",
+        "docStart": 119,
+        "docEnd": 142
+      },
+      {
+        "type": "InstrumentBlock",
+        "line": 4,
+        "name": "lead",
+        "fields": [
+          {
+            "type": "wave",
+            "line": 5,
+            "tokens": [
+              "pulse"
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "adsr",
+            "line": 6,
+            "a": 0,
+            "d": 0,
+            "s": 15,
+            "r": 0
+          }
+        ]
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 8,
+        "index": 0,
+        "instrumentName": "lead",
+        "notes": {
+          "isSigil": true,
+          "sigilName": "hats"
+        },
+        "arrangement": null,
+        "inlineAttrs": [],
+        "transforms": []
+      }
+    ]
+  }
+}

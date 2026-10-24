@@ -1,0 +1,34 @@
+{
+  "name": "rasterklang-dsl",
+  "version": "0.1.0",
+  "description": "A text notation for writing C64 SID music: grammar, parser and interpreter (research project)",
+  "license": "MIT",
+  "author": "Daniel Nögel",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dnoegel/rasterklang-dsl.git"
+  },
+  "homepage": "https://github.com/dnoegel/rasterklang-dsl#readme",
+  "type": "module",
+  "main": "src/dsl/index.js",
+  "files": [
+    "src/",
+    "grammar/",
+    "docs/dsl-spec.generated.json"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "generate:dsl-spec": "node scripts/generate-dsl-spec.mjs",
+    "lint:dsl": "node scripts/dsl-lint.mjs"
+  },
+  "dependencies": {
+    "antlr4": "^4.13.2"
+  },
+  "peerDependencies": {
+    "rasterklang-score": "^0.1.0"
+  },
+  "devDependencies": {
+    "rasterklang-score": "file:../rasterklang-score",
+    "vitest": "^3.0.0"
+  }
+}

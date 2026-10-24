@@ -1,0 +1,45 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "TempoStmt",
+        "line": 2,
+        "unit": "bpm",
+        "value": {
+          "kind": "number",
+          "value": 120
+        },
+        "beats": 4,
+        "offset": null,
+        "meter": null
+      },
+      {
+        "type": "PatternDecl",
+        "line": 3,
+        "name": "odd",
+        "length": 7.5,
+        "each": null,
+        "elements": null,
+        "source": "c4@0.5 d4@3 e4@4",
+        "docStart": 105,
+        "docEnd": 121
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 4,
+        "index": 0,
+        "instrumentName": null,
+        "notes": {
+          "isSigil": true,
+          "sigilName": "odd"
+        },
+        "arrangement": null,
+        "inlineAttrs": [],
+        "transforms": []
+      }
+    ]
+  }
+}

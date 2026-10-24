@@ -1,0 +1,49 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "InstrumentBlock",
+        "line": 1,
+        "name": "lead",
+        "fields": [
+          {
+            "type": "wave",
+            "line": 2,
+            "tokens": [
+              "pulse",
+              "triangle"
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "pw",
+            "line": 3,
+            "tokens": [
+              2048,
+              2400
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "loop",
+            "line": 4,
+            "pairs": [
+              {
+                "table": "wave",
+                "value": 1
+              },
+              {
+                "table": "pw",
+                "value": 3
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

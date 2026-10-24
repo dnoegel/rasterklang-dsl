@@ -1,0 +1,101 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "PatternDecl",
+        "line": 1,
+        "name": "hook",
+        "length": null,
+        "each": null,
+        "elements": null,
+        "source": "c4!3 e4!2 g4",
+        "docStart": 16,
+        "docEnd": 28
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "extended",
+        "line": 3,
+        "index": 1,
+        "instrumentName": "lead",
+        "fields": [
+          {
+            "type": "notes",
+            "line": 4,
+            "isSigil": true,
+            "sigilName": "hook"
+          },
+          {
+            "type": "pipeline",
+            "line": 5,
+            "transforms": [
+              {
+                "type": "off",
+                "line": 5,
+                "time": {
+                  "value": 0.125
+                },
+                "fn": {
+                  "type": "add",
+                  "line": 5,
+                  "n": {
+                    "value": 12
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "type": "pipeline",
+            "line": 6,
+            "transforms": [
+              {
+                "type": "degradeBy",
+                "line": 6,
+                "p": {
+                  "value": 0.1
+                }
+              }
+            ]
+          },
+          {
+            "type": "pipeline",
+            "line": 7,
+            "transforms": [
+              {
+                "type": "sometimesBy",
+                "line": 7,
+                "p": {
+                  "value": 0.3
+                },
+                "fn": {
+                  "type": "ply",
+                  "line": 7,
+                  "n": {
+                    "value": 2
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 10,
+        "index": 0,
+        "instrumentName": "bass",
+        "notes": {
+          "isSigil": true,
+          "sigilName": "bassLine"
+        },
+        "arrangement": null,
+        "inlineAttrs": [],
+        "transforms": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "ok": false,
+  "line": 1,
+  "message": "line 1: expected '=' after pattern name '?' (optionally preceded by the pattern's declared length in beats, e.g. `pattern ? 4 = \"...\"`)"
+}

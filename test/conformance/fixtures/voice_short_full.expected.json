@@ -1,0 +1,103 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 1,
+        "index": 0,
+        "instrumentName": null,
+        "notes": {
+          "isSigil": false,
+          "source": "c2 ~ c2 g1",
+          "docStart": 9,
+          "docEnd": 19
+        },
+        "arrangement": null,
+        "inlineAttrs": [
+          {
+            "name": "wave",
+            "values": [
+              "pulse"
+            ]
+          },
+          {
+            "name": "adsr",
+            "values": [
+              0,
+              4,
+              10,
+              4
+            ]
+          },
+          {
+            "name": "pw",
+            "values": [
+              1536
+            ]
+          }
+        ],
+        "transforms": [
+          {
+            "type": "every",
+            "line": 1,
+            "n": {
+              "value": 4
+            },
+            "fn": {
+              "type": "rev",
+              "line": 1
+            }
+          }
+        ]
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 3,
+        "index": 0,
+        "instrumentName": null,
+        "notes": {
+          "isSigil": false,
+          "source": "c4",
+          "docStart": 79,
+          "docEnd": 81
+        },
+        "arrangement": null,
+        "inlineAttrs": [
+          {
+            "name": "wave",
+            "isPattern": true,
+            "source": "pulse|triangle",
+            "docStart": 89,
+            "docEnd": 103
+          }
+        ],
+        "transforms": []
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 5,
+        "index": 0,
+        "instrumentName": "bass",
+        "notes": {
+          "isSigil": false,
+          "source": "c2 ~ c2 ~",
+          "docStart": 120,
+          "docEnd": 129
+        },
+        "arrangement": null,
+        "inlineAttrs": [],
+        "transforms": [
+          {
+            "type": "rev",
+            "line": 5
+          }
+        ]
+      }
+    ]
+  }
+}

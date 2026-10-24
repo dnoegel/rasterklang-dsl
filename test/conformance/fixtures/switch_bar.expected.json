@@ -1,0 +1,117 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "TempoStmt",
+        "line": 2,
+        "unit": "bpm",
+        "value": {
+          "kind": "number",
+          "value": 120
+        },
+        "beats": 4,
+        "offset": null,
+        "meter": null
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 3,
+        "index": 0,
+        "instrumentName": null,
+        "notes": {
+          "isSigil": false,
+          "source": "c4 e4",
+          "docStart": 81,
+          "docEnd": 86
+        },
+        "arrangement": null,
+        "inlineAttrs": [],
+        "transforms": []
+      },
+      {
+        "type": "FilterBlock",
+        "line": 4,
+        "fields": [
+          {
+            "type": "cutoff",
+            "line": 5,
+            "expr": {
+              "type": "SwitchBlock",
+              "line": 5,
+              "cases": [
+                {
+                  "line": 6,
+                  "cond": {
+                    "op": "<",
+                    "value": 4
+                  },
+                  "value": {
+                    "type": "SignalExpr",
+                    "line": 6,
+                    "signal": "sine",
+                    "range": {
+                      "lo": 300,
+                      "hi": 1200
+                    },
+                    "speeds": [
+                      {
+                        "op": "/",
+                        "value": 4
+                      }
+                    ]
+                  }
+                },
+                {
+                  "line": 7,
+                  "cond": {
+                    "op": "else"
+                  },
+                  "value": {
+                    "type": "SignalExpr",
+                    "line": 7,
+                    "signal": "saw",
+                    "range": {
+                      "lo": 400,
+                      "hi": 2000
+                    },
+                    "speeds": [
+                      {
+                        "op": "/",
+                        "value": 8
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "mode",
+            "line": 8,
+            "expr": {
+              "type": "SignalExpr",
+              "line": 8,
+              "signal": "lowpass",
+              "range": null,
+              "speeds": []
+            }
+          },
+          {
+            "type": "route",
+            "line": 9,
+            "expr": {
+              "type": "NumberListExpr",
+              "line": 9,
+              "values": [
+                0
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

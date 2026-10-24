@@ -1,0 +1,118 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "VoiceStmt",
+        "mode": "extended",
+        "line": 1,
+        "index": 0,
+        "instrumentName": "bass",
+        "fields": [
+          {
+            "type": "notes",
+            "line": 2,
+            "isSigil": false,
+            "source": "c2 ~ c2 ~",
+            "docStart": 22,
+            "docEnd": 31
+          },
+          {
+            "type": "reg",
+            "line": 3,
+            "target": {
+              "kind": "ident",
+              "name": "control"
+            },
+            "source": "9 8 9 8"
+          },
+          {
+            "type": "reg",
+            "line": 4,
+            "target": {
+              "kind": "hex",
+              "value": 21
+            },
+            "source": "3 3 3 3"
+          },
+          {
+            "type": "vib",
+            "line": 5,
+            "depth": 0.2,
+            "rate": 6
+          },
+          {
+            "type": "slide",
+            "line": 6,
+            "time": 0.1
+          },
+          {
+            "type": "gate",
+            "line": 7,
+            "value": 0.9
+          }
+        ]
+      },
+      {
+        "type": "FilterBlock",
+        "line": 10,
+        "fields": [
+          {
+            "type": "cutoff",
+            "line": 11,
+            "expr": {
+              "type": "SignalExpr",
+              "line": 11,
+              "signal": "sine",
+              "range": {
+                "lo": 300,
+                "hi": 2200
+              },
+              "speeds": [
+                {
+                  "op": "/",
+                  "value": 4
+                }
+              ]
+            }
+          },
+          {
+            "type": "resonance",
+            "line": 12,
+            "expr": {
+              "type": "NumberListExpr",
+              "line": 12,
+              "values": [
+                10
+              ]
+            }
+          },
+          {
+            "type": "mode",
+            "line": 13,
+            "expr": {
+              "type": "SignalExpr",
+              "line": 13,
+              "signal": "lowpass",
+              "range": null,
+              "speeds": []
+            }
+          },
+          {
+            "type": "route",
+            "line": 14,
+            "expr": {
+              "type": "NumberListExpr",
+              "line": 14,
+              "values": [
+                0,
+                1
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

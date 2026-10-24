@@ -1,0 +1,409 @@
+// Human-written documentation (signature + one-line description + a real,
+// parseable example) for every DSL v2 statement/field/transform keyword -
+// the content behind editor completion docs and signature help, and what
+// scripts/generate-dsl-spec.mjs reads to build docs/dsl-spec.generated.json
+// (the generated, versioned, machine-readable spec).
+//
+// Unlike src/dsl/keywords.js's vocabulary lists (re-exported from the
+// parser and registerMap.js so there's no second copy to drift), this prose
+// can't be derived from the grammar. A missing entry is still checkable
+// mechanically: every name in STATEMENT_KEYWORDS/INSTRUMENT_FIELDS/
+// VOICE_FIELDS/TRANSFORMS/FILTER_FIELDS should have a complete entry here
+// (signature, description, AND example).
+export const FIELD_DOCS = {
+  // --- statement keywords ---------------------------------------------------
+  tempo: {
+    signature: 'tempo NUMBER|STRING [meter INT/INT | beats INT] [offset NUMBER]',
+    description:
+      'Sets the song tempo in BPM. A quoted mini-notation pattern instead of a plain number lets tempo vary per bar, e.g. tempo "<120 96>". `meter N/D` (ADR 0003 D2) sets the bar to N beats, each beat a 1/D note - a real time signature, replacing the older `beats INT` (which only ever said the numerator, always assuming quarter-note beats; still legal, but mutually exclusive with `meter` on one statement). `offset` shifts the WHOLE song\'s pattern clock by that many beats (fractional and negative both allowed): a positive value delays the song, so its first bar starts that many beats in - a pickup beat, or a converted tracker tune whose player takes one row to get going, without having to rotate the note data itself and knock every pattern boundary off the bar grid. Mutually exclusive with `speed`: a song has exactly one clock statement.',
+    example: 'tempo 120 meter 4/4 offset 1',
+  },
+  speed: {
+    signature: 'speed NUMBER|STRING [meter INT/INT | beats INT] [offset NUMBER]',
+    description:
+      'Sets the song clock in FRAMES PER BEAT instead of BPM - the exact, frame-native spelling of `tempo`, and the one GoatTracker data is already in. `speed 6` is 6 PAL frames per beat, i.e. 500 BPM, with no rounding anywhere: `tempo 132 beats 8` computes 181.8 frames per bar and has to round, `speed 6 beats 8` is exactly 48. Takes the same `meter`/`beats`/`offset` suffixes as `tempo`. Mutually exclusive with `tempo`: a song has exactly one clock statement, and having neither or both is a compile error.',
+    example: 'speed 6 beats 8',
+  },
+  target: {
+    signature: 'target { [video PAL|NTSC] [driveCycles INT] [multispeed INT] }',
+    description:
+      "Declares the song's DRIVE rate: how many CPU cycles pass between two play calls. Where `tempo`/`speed`/`beats` say how long a beat is in frames, this says how long a FRAME is - the thing DSL v2 used to have one hard-coded answer to (PAL, 50.00 calls per second). `driveCycles N` is the exact primitive; `video PAL|NTSC` and `multispeed N` are named shorthands over it (PAL = 19705 cycles at 985248 Hz = 49.99990 fps, NTSC = 17045 at 1022727 Hz = 60.00158 fps, `multispeed 3` = three calls per video frame). Optional, at most one per song; omitting it means PAL 50.00 fps, so no existing song changes meaning. `driveCycles` and `multispeed` together is an error - they compute the same number two ways. Distinct from `chip`: `target` is the DRIVE RATE (how often the player runs), `chip` is the SID MODEL (which chip it runs on) - independent axes.",
+    example: 'target { video NTSC }',
+  },
+  chip: {
+    signature: 'chip 6581|8580',
+    description:
+      "Declares which SID model this song was written for/against (ADR 0003 D15). Optional, at most one per song; a song with none means today's default model (whatever the player/exporter currently has selected) - this only lets a song RECORD its own choice so it travels with the song through save, re-open, and `.sid` export instead of living only in transient UI state.",
+    example: 'chip 8580',
+  },
+  pattern: {
+    signature: 'pattern NAME [BEATS | each INT/INT] = STRING',
+    description:
+      'Declares a reusable named mini-notation pattern, referenced elsewhere as $NAME. The optional number before `=` is the pattern\'s DECLARED LENGTH IN BEATS, and declaring it switches the pattern from proportional to metric: an unweighted token is then exactly one beat (and `@n` is n beats) instead of a share of one bar, the contents are checked against the declared length, and the pattern loops at that length however long a bar is. Decimals are allowed. `each 1/D` (ADR 0003 D3) is the step-sequencer alternative: every token is exactly one 1/D note, so the pattern\'s length is DERIVED from its own token count rather than declared - the natural spelling for a 16-step drum row. With no number and no `each` the pattern stays proportional - it fills exactly one bar - which is the pre-3.0.0 behaviour.',
+    example: 'pattern hook = "c4!3 e4!2 g4"\npattern bass 4 = "c2 ~ c2 ~"\npattern hats each 1/16 = "x ~ x ~ x ~ x ~ x ~ x ~ x ~ x ~"',
+  },
+  table: {
+    signature: 'table NAME = TOKEN+',
+    description:
+      'Declares a reusable named per-frame instrument table, referenced from any table-valued instrument field as $NAME (`filterTable $sweep`). The table equivalent of a `pattern` declaration: `pattern` shares a note sequence between voices, `table` shares a per-frame table between instruments. Spliced in place, so a row can mix a shared table with literal values (`pw $attack 2048`) or concatenate several. Must be declared before the instrument that uses it.',
+    example: 'table filterSweep = 1088 1040 992 944 896',
+  },
+  instrument: {
+    signature: 'instrument NAME ... end',
+    description: 'Declares a named, table-driven instrument (wave/adsr/pw/arp/filterTable/loop/vib/slide/test/gate).',
+    example: 'instrument lead\n  wave pulse\n  adsr 0 9 0 0\nend',
+  },
+  voice: {
+    signature: 'voice INDEX [INSTRUMENT] (STRING|$NAME) ...',
+    description:
+      "Declares one of the 3 SID hardware voices (index 0-2), in short (single-line) or extended ('end'-terminated) " +
+      'form. INSTRUMENT is an optional reference to a named `instrument` block, usable in either form; it can\'t be ' +
+      'combined with inline instrument attributes on the same voice.',
+    example: 'voice 0 "c4 e4 g4 c5" wave:pulse adsr:0,4,10,4\nvoice 1 bass $bassLine',
+  },
+  filter: {
+    signature: 'filter ... end',
+    description: 'Configures the one shared SID filter (cutoff/resonance/mode/route).',
+    example: 'filter\n  cutoff sine 300..2200 / 4\n  resonance 10\n  mode lowpass\n  route 0 1\nend',
+  },
+
+  // --- instrument fields -----------------------------------------------------
+  wave: {
+    signature: 'wave TOKEN+ [speed N] [delay N]',
+    description:
+      'Per-frame waveform table (triangle/saw/pulse/noise), stepped once per frame since note onset. A single bare word is a static waveform. Join names with "+" for waveforms sounding SIMULTANEOUSLY in one frame slot, e.g. "noise+pulse"; a bare number is the same thing as a raw control-byte bitmask. On a voice field instead, a quoted STRING gives a cycle-position-sampled waveform PATTERN, e.g. "pulse|triangle" (random per-cycle choice) or "[pulse,triangle]" (combined bits). Trailing `speed N`/`delay N` (ADR 0003 D10, on any of wave/arp/pw/filterTable/test/gate) slow the table down (one entry held for N frames) and/or delay its start (the first N frames hold entry 0) - independent per table, like `loop`. This field also accepts the `set`/`add`/`wait`/`loop`/`stop` verb-block form (D13) instead of a bare token row, for tables too long to read as raw numbers.',
+    example: 'wave pulse noise+pulse triangle saw',
+  },
+  adsr: {
+    signature: 'adsr A D S R',
+    description: 'Attack, Decay, Sustain, Release - each 0-15 (SID envelope register nibbles).',
+    example: 'adsr 0 9 0 0',
+  },
+  pw: {
+    signature: 'pw NUMBER | TOKEN+',
+    description: 'Pulse width, 0-4095 - a constant, or a per-frame table for PWM sweeps.',
+    example: 'pw 2048 2400 2800 3200 2800 2400',
+  },
+  arp: {
+    signature: 'arp NUMBER+',
+    description: "Per-frame relative semitone offsets added to the voice's currently sounding note (table-driven fake-chord arpeggio).",
+    example: 'arp 0 4 7 12',
+  },
+  filterTable: {
+    signature: 'filterTable NUMBER+',
+    description: "Per-frame values WRITTEN to the shared filter block's cutoff, replacing it (and its `cutoff` field) for as long as the table runs. Independent of `route`: routing only picks which voices pass through the one filter, never what its cutoff is. Two voices running one at once do not sum - the most recently started table wins.",
+    example: 'filterTable 0 20 40 60 40 20',
+  },
+  loop: {
+    signature: 'loop (INT | (wave|pw|arp|filterTable|test|gate) INT)+',
+    description:
+      'Index a table wraps back to once it runs past its last step (GoatTracker-style sustain loop). A bare INT sets one global default for every table this instrument has. One or more `TABLE INT` pairs instead give each named table its OWN independent loop point, matching GoatTracker/SID-Wizard where wave/pulse/filter tables each carry their own loop marker. A table field\'s own `loop`/`stop` VERB (ADR 0003 D13, inside that field\'s own `end`-terminated block) marks the same loop point positionally instead of by index - using both this field and a verb for the same table is an error.',
+    example: 'loop wave 1 filterTable 0',
+  },
+  hardRestart: {
+    signature: 'hardRestart FRAMES',
+    description:
+      "The readable spelling of `gate -FRAMES` (ADR 0003 D11): drops the gate for the note's last FRAMES frames so the NEXT note gets a genuine, frame-observable low-to-high edge (a real SID hard restart), whatever the note's own length. Compiles to exactly the same AST shape `gate -N` does - a spelling, not a second mechanism. Giving both `gate` and `hardRestart` on one instrument is redundant (whichever is written last wins, the same as repeating any other field).",
+    example: 'hardRestart 2',
+  },
+  vib: {
+    signature: 'vib DEPTH RATE',
+    description: 'Vibrato: a sine pitch wobble of DEPTH semitones at RATE Hz, phase-reset (re-triggered) on every note onset.',
+    example: 'vib 0.15 5',
+  },
+  vibTri: {
+    signature: 'vibTri CMP SPEED DELAY',
+    description:
+      "GoatTracker's OWN vibrato, as a continuous per-note modulator: gplay.c's integrating triangle (a vibtime counter stepping by 2, inverted whenever it passes CMP, its low bit choosing whether this frame adds or subtracts SPEED from the frequency register), started DELAY frames after the note's onset. Not expressible as `vib`: that is a sine in SEMITONES, this is a triangle in raw frequency-register units whose first quarter-period is only half amplitude, and a semitone sine matches neither its shape nor its depth at any note. One half period lasts CMP+2 frames and the swing is +/-(CMP/2+1)*SPEED register units. SPEED may instead be `sN`, meaning \"one semitone at the current note, shifted right by N\" - GoatTracker's own note-relative speed encoding. Takes precedence over `vib` when an instrument somehow sets both.",
+    example: 'vibTri 5 s3 8',
+  },
+  slide: {
+    signature: 'slide TIME',
+    description: "Portamento: glides from the previous note's pitch to this note's pitch over TIME (a fraction of a beat).",
+    example: 'slide 0.08',
+  },
+  test: {
+    signature: 'test (0|1)+',
+    description: 'Per-frame test-bit table (SID control-byte bit 3).',
+    example: 'test 1 0 0 0',
+  },
+  gate: {
+    signature: 'gate (FRACTION | N% | -FRAMES | legato | retrigger | TOKEN TOKEN+)',
+    description:
+      "A single number is a static fraction (0..1) of a note's slot the gate stays held high before releasing (turns the gate off once, never back on) - `N%` (ADR 0003 D11) is the same fraction spelled as a percentage, e.g. `gate 80%` is identical to `gate 0.8`. A NEGATIVE number is the same idea in absolute frames instead - `gate -2` (or the readable `hardRestart 2`) holds the gate high until the note's last 2 frames, whatever the note's length, which is GoatTracker's per-instrument gate-off timer (its hard restart) and what makes a run of notes retrigger the envelope once per note. `gate legato` (D11) suppresses retriggering between CONSECUTIVE notes entirely - the gate never drops, frames-since-onset keeps counting so the instrument's tables keep running, the same suppression a per-row `fx:\"tp\"` tone-portamento command already gets, now available as an instrument-wide default. `gate retrigger` is the opposite: guarantees a real, frame-observable low-to-high edge on EVERY note, including a repeated pitch (today's default only forces an edge invisible to anything sampling registers once per frame). Two or more space-separated tokens is instead a per-frame 0/1 gate-bit PROGRAM, frames-since-onset sampled and loopable like wave/arp/pw/test - GoatTracker/SID-Wizard's technique of toggling the gate bit off then back on mid-note (a wave-table row) to retrigger the ADSR envelope for a percussive pluck without starting a new note. That per-frame program can also be written as a `set`/`add`/`wait`/`loop`/`stop` verb block (ADR 0003 D13, see `loop`'s own doc) instead of a bare token row.",
+    example: 'gate 1 1 1 0 1 1 1 0',
+  },
+
+  // --- voice-only fields -------------------------------------------------------
+  notes: {
+    signature: 'notes STRING | $NAME',
+    description: "The voice's note pattern - a quoted mini-notation string, or a reference to a `pattern` declaration.",
+    example: 'notes "c2 ~ c2 ef2 ~ c2 g1 ~ ~"',
+  },
+  insts: {
+    signature: 'insts STRING',
+    description:
+      "Switches instruments PER NOTE on this one voice - a quoted mini-notation pattern of already-declared `instrument` NAMEs, sampled at each note's own onset and held for that note's whole duration. This is the DSL's answer to GoatTracker's per-row instrument column (e.g. alternating bass/drum/snare on one channel), something a single `voice`/`instrument N ...` binding can't express on its own. A note whose onset has no active `insts` value falls back to the voice's own static instrument (a named instrument or inline attrs), so not every note needs its own entry.",
+    example: 'insts "bass bass drum bass"',
+  },
+  fx: {
+    signature: 'fx STRING',
+    description:
+      "Fires one-shot EFFECT COMMANDS per row on this one voice - a quoted mini-notation pattern of effect tokens, structurally parallel to `notes` the way `insts` is. This is the DSL's answer to GoatTracker's per-row command/command-data columns, the one-shot triggers a continuous instrument-level `vib`/`slide` cannot express. Tokens: `pup.N`/`pdn.N` (portamento up/down by N frequency-register units per frame), `tp.N` (tone portamento toward this note at N per frame, also legato - it suppresses the note's gate retrigger), `vib.CMP.SPEED` (GoatTracker's own triangle vibrato), `ad.A.D`/`sr.S.R` (overwrite the envelope registers), `wave.N` (overwrite the waveform bits), `pw.N` (overwrite the pulse width, 0-4095, the same 12-bit domain as an instrument's own `pw` table; ignored when the instrument has a `pw` table of its own, since that table rewrites the register every frame), `fcut.N` (shared filter cutoff), `vol.N` (master volume). A speed parameter may instead be `sN`, meaning \"one semitone at the current note, shifted right by N\". Unlike `insts`, `fx` is sampled on its OWN step boundaries, not at note onsets - a tracker command runs on its row whether or not that row carries a note.",
+    example: 'fx "~ tp.24 ~ vib.16.100"',
+  },
+  reg: {
+    signature: 'reg TARGET STRING',
+    description:
+      'Raw register escape hatch: overwrites a byte per-frame from a mini-notation pattern, applied last, after every other field. TARGET is a symbolic register name or a 0xNN hex address.',
+    example: 'reg control "9 8 9 8"',
+  },
+  sync: {
+    signature: 'sync (0|1) | STRING',
+    description: "Hard-syncs this voice's oscillator to its (i+2)%3 neighbor voice (control-byte bit 1) - a bare 0/1, or a pattern if it should vary over time.",
+    example: 'sync 1',
+  },
+  ring: {
+    signature: 'ring (0|1) | STRING',
+    description: "Ring-modulates this voice's triangle output against its (i+2)%3 neighbor (control-byte bit 2) - a bare 0/1, or a pattern if it should vary over time.",
+    example: 'ring "1 0"',
+  },
+
+  // --- pipeline transforms -----------------------------------------------------
+  rev: {
+    signature: 'rev',
+    description: 'Reverses the pattern within each cycle.',
+    example: 'voice 0 "c4 e4 g4 b4" |> rev',
+  },
+  fast: {
+    signature: 'fast N',
+    description: 'Speeds the pattern up by a factor of N.',
+    example: 'voice 0 "c4 e4 g4 b4" |> fast 2',
+  },
+  slow: {
+    signature: 'slow N',
+    description: 'Slows the pattern down by a factor of N.',
+    example: 'voice 0 "c4 e4 g4 b4" |> slow 2',
+  },
+  every: {
+    signature: 'every N transform',
+    description: 'Applies transform on every Nth cycle only.',
+    example: 'voice 0 "c4 e4 g4 b4" |> every 4 rev',
+  },
+  iter: {
+    signature: 'iter N',
+    description: 'Rotates which subdivision starts the cycle, advancing by one step each cycle and wrapping after N cycles.',
+    example: 'voice 0 "c4 e4 g4 b4" |> iter 4',
+  },
+  ply: {
+    signature: 'ply N',
+    description: 'Repeats each event N times within its own slot (fast retrigger).',
+    example: 'voice 0 "c4 e4" |> ply 3',
+  },
+  off: {
+    signature: 'off TIME transform',
+    description: 'Overlays a copy of the pattern, time-shifted by TIME and passed through transform - claims a second hardware voice.',
+    example: 'voice 0 "c4 e4 g4 b4" |> off 0.125 (add 12)',
+  },
+  jux: {
+    signature: 'jux transform',
+    description: 'Overlays a transformed copy of the pattern in parallel - claims a second hardware voice (no stereo panning on real SID hardware).',
+    example: 'voice 0 "c4 e4 g4 b4" |> jux rev',
+  },
+  degradeBy: {
+    signature: 'degradeBy P',
+    description: 'Randomly drops each event with probability P (0..1).',
+    example: 'voice 0 "c4 e4 g4 b4" |> degradeBy 0.3',
+  },
+  sometimesBy: {
+    signature: 'sometimesBy P transform',
+    description: 'Applies transform to a random P fraction (0..1) of events, leaving the rest untouched.',
+    example: 'voice 0 "c4 e4 g4 b4" |> sometimesBy 0.5 (fast 2)',
+  },
+  add: {
+    signature: 'add N',
+    description: 'Transposes notes up by N semitones (negative N transposes down).',
+    example: 'voice 0 "c4 e4 g4" |> add 12',
+  },
+
+  struct: {
+    signature: 'struct STRING',
+    description:
+      'Takes the RHYTHM from a boolean pattern and the VALUES from the pattern it is applied to - "x ~ x x" triggers on beats 1, 3 and 4. Lets a drum rhythm be written (and reused) independently of what it triggers.',
+    example: 'voice 2 "c4" wave:noise |> struct "x ~ x x"',
+  },
+  mask: {
+    signature: 'mask STRING',
+    description:
+      "The complement of struct: keeps the pattern's OWN rhythm and drops only the events falling where the boolean pattern is off. Useful for muting part of a phrase without rewriting it.",
+    example: 'voice 0 "c4 d4 e4 f4" |> mask "1 0 1 1"',
+  },
+  chunk: {
+    signature: 'chunk N transform',
+    description:
+      'Applies the transform to a different 1/N slice of the cycle each cycle, working through all N slices over N cycles. Unlike `every` (which transforms a whole cycle at a time), this keeps most of the phrase intact and moves the varied window along.',
+    example: 'voice 0 "c4 e4 g4 b4" |> chunk 4 (add 12)',
+  },
+  palindrome: {
+    signature: 'palindrome',
+    description: 'Plays the pattern forwards on even cycles and reversed on odd ones.',
+    example: 'voice 0 "c4 e4 g4" |> palindrome',
+  },
+  linger: {
+    signature: 'linger FRACTION',
+    description: "Takes the first FRACTION of the cycle and repeats it for the rest of the cycle, so a phrase sticks on its own opening.",
+    example: 'voice 0 "c4 e4 g4 b4" |> linger 0.5',
+  },
+  rot: {
+    signature: 'rot N',
+    description:
+      "Rotates the VALUES by N while leaving the rhythm untouched - every onset stays exactly where it was, only what sounds at each one moves. Distinct from `iter`, which rotates whole events, timing included.",
+    example: 'voice 0 "c4 e4 g4 b4" |> rot 1',
+  },
+  someBarsBy: {
+    signature: 'someBarsBy P transform',
+    description:
+      'Applies the transform to whole bars, chosen at random with probability P. `sometimesBy` decides per event (a scattered mix inside one bar); this decides once per bar, giving an occasional different bar.',
+    example: 'voice 0 "c4 e4 g4 b4" |> someBarsBy 0.3 rev',
+  },
+  someCyclesBy: {
+    signature: 'someCyclesBy P transform',
+    description:
+      'The pre-3.0.0 name for `someBarsBy`, kept working so existing songs keep compiling. Prefer `someBarsBy`: what it counts is bars.',
+    example: 'voice 0 "c4 e4 g4 b4" |> someCyclesBy 0.3 rev',
+  },
+  superimpose: {
+    signature: 'superimpose transform',
+    description:
+      'Plays the pattern AND a transformed copy simultaneously - claims a second hardware voice, exactly like `jux`, since one SID oscillator cannot sound two notes at once. Same operation as `jux` without its stereo-panning connotation, which means nothing on real SID hardware.',
+    example: 'voice 0 "c4 e4 g4" |> superimpose (add 12)',
+  },
+  scale: {
+    signature: 'scale STRING',
+    description:
+      'Reinterprets the pattern\'s values as scale DEGREES, mapping each to a real pitch in the given key ("c4:minor", "a3:dorian"). This is what makes transposition musical: on degrees, `add 2` moves a phrase two SCALE steps and stays in key, where on raw notes the same `add 2` shifts by two semitones and leaves the key. Degrees past the end of the scale wrap into the next octave, negative ones downward. Write the pattern as degrees ("0 2 4"), NOT note names - "c4" is already the number 60, which scale would read as degree 60.',
+    example: 'voice 0 "0 2 4 7" |> scale "c4:minor"',
+  },
+
+  // --- filter fields -----------------------------------------------------------
+  cutoff: {
+    signature: 'cutoff SIGNAL [LO..HI] [*|/|>> N]... | switch cycle ...',
+    description:
+      'Filter cutoff: a continuous signal (sine/saw/square/tri/rand/perlin), optionally ranged and sped up/slowed/shifted, or a per-cycle switch block for piecewise automation.',
+    example: 'cutoff sine 300..2200 / 4',
+  },
+  resonance: {
+    signature: 'resonance NUMBER',
+    description: 'Filter resonance, 0-15.',
+    example: 'resonance 10',
+  },
+  mode: {
+    signature: 'mode lowpass|bandpass|highpass|none',
+    description: 'Filter mode.',
+    example: 'mode lowpass',
+  },
+  route: {
+    signature: 'route INT [INT...]',
+    description: 'Which voice indices (0-2) are routed through the shared filter.',
+    example: 'route 0 1',
+  },
+
+  // --- mini-notation tokens (inside a quoted pattern string) -------------------
+  // Keyed by the token text itself, matching keywords.js's
+  // MINI_NOTATION_TOKENS. These describe what a user types INSIDE a
+  // pattern, not a statement/field name, which is why they live at the end
+  // rather than under one of the sections above.
+  '~': {
+    signature: '~',
+    description: 'Rest: nothing sounds for this step, and a note already sounding is CUT (the gate closes). A weighted rest (`~@4`) closes it for its whole span, exactly like four plain rests would.',
+    example: 'voice 0 "c4 ~ c4 ~"',
+  },
+  _: {
+    signature: '_',
+    description:
+      "Hold: the previous step keeps sounding for one more step - a tracker's empty row. The opposite of a rest, which cuts the note. `\"c4 _ _ _\"` is one note ringing for four beats; `\"c4 _ ~ ~\"` rings for two and then releases. Holds chain, and `_@2`/`_!2` add that many steps' worth of ring at once.",
+    example: 'pattern lead 8 = "c5 _ _ _ e5 ~ g5 _"',
+  },
+  '@': {
+    signature: '@N',
+    description:
+      "Weight: how much of the sequence this step occupies. In a pattern with a declared length that is N BEATS; in a proportional pattern it is N shares of the bar. Decimals are allowed.",
+    example: 'pattern riff 4 = "c4@2 e4 g4"',
+  },
+  '!': {
+    signature: '!N',
+    description: 'Replicate: N copies of this step, each its own step (so a 4-step sequence of `c4!4` is four separate notes, not one long one). Bare `!` means 2.',
+    example: 'voice 0 "c4!3 g4"',
+  },
+  '*': {
+    signature: '*N',
+    description: 'Speed this step up by N, subdividing its own slot.',
+    example: 'voice 0 "c4*4 e4"',
+  },
+  '/': {
+    signature: '/N[.|t]',
+    description:
+      "Duration in beats (ADR 0003 D1): this step is beatUnit/N beats long - `c4/4` at the default beatUnit is a quarter note, `c4/8` an eighth. A trailing `.` dots it (x1.5, e.g. `/4.` is a dotted quarter); a trailing `t` makes it a triplet (x2/3, e.g. `/4t`). A pattern mixing `/N` durations with `@n` weights is an error - they are two authoring models for the same underlying number, so pick one per pattern. (Before 3.1.0 `/N` instead meant \"slow this step down by N\" - superseded, since a note's own length is what a musician actually means by that syntax.)",
+    example: 'voice 0 "c4/4 e4/8 g4/8"',
+  },
+  'slideTo:': {
+    signature: 'slideTo:NOTE',
+    description:
+      "Portamento to an explicit target pitch (ADR 0003 D12), e.g. `slideTo:c5`. Legato with the previous note (no retrigger, the instrument's own `slide TIME` field does the actual glide) - a target pitch a plain `slide` field alone cannot express, since without it a slide can only ever be to whatever note comes next.",
+    example: 'instrument lead\n  slide 0.5\nend\nvoice 0 lead "c4/4 g4/4 slideTo:c5/2"',
+  },
+  '?': {
+    signature: '?P',
+    description: 'Drop this step at random with probability P (default 0.5).',
+    example: 'voice 0 "c4 e4?0.3 g4"',
+  },
+  '[]': {
+    signature: '[ ... ]',
+    description: 'Group: one step containing its own sequence. A comma inside stacks the sequences so they sound together.',
+    example: 'voice 0 "c4 [e4 g4] c5"',
+  },
+  '<>': {
+    signature: '< ... >',
+    description:
+      'Alternation, i.e. an ORDERLIST: one element per pass, cycling. Each element occupies its own declared length when the elements are metric patterns, which is exactly how a tracker orderlist replays a column of patterns.',
+    example: 'voice 0 "<[$verse] [$chorus]>"',
+  },
+  '{}': {
+    signature: '{ ... }',
+    description: 'Polymetre group: its steps keep their own step length instead of being squeezed into one slot.',
+    example: 'voice 0 "{c4 e4 g4}"',
+  },
+  ',': {
+    signature: ',',
+    description: 'Stack: the sequences on either side sound simultaneously (one voice can only do this for values, not for two SID notes at once).',
+    example: 'voice 0 "[c4 e4, g4 b4]"',
+  },
+  '|': {
+    signature: '|',
+    description: 'Random choice: one of the alternatives, picked per pass.',
+    example: 'voice 0 "c4 e4|g4"',
+  },
+
+  // --- structural keyword completions also offered as a block field ------------
+  end: {
+    signature: 'end',
+    description: 'Closes the current instrument/voice/filter block.',
+    example: 'end',
+  },
+  meter: {
+    signature: 'meter INT/INT',
+    description: "A `tempo`/`speed` setting (ADR 0003 D2): a bar is the numerator's-worth of beats, each beat a 1/denominator note. `meter 4/4` is common time; `meter 6/8` is a bar of six eighth-note beats. Replaces `beats INT` (which only ever gave the numerator); mutually exclusive with it on one clock statement.",
+    example: 'tempo 120 meter 4/4',
+  },
+  each: {
+    signature: 'each INT/INT',
+    description: "A `pattern` declaration's length setting (ADR 0003 D3): every token in the pattern is exactly one 1/denominator note (the numerator is the step's own weight, almost always 1), so the pattern's total length is DERIVED from its token count rather than declared up front - the natural spelling for a fixed-grid step sequencer (a 16-step drum row, `each 1/16`).",
+    example: 'pattern hats each 1/16 = "x ~ x ~ x ~ x ~ x ~ x ~ x ~ x ~"',
+  },
+  ramp: {
+    signature: 'ramp FROM..TO [step N] [over N] [pingpong|loop]',
+    description:
+      "A per-frame table generator (a table row's own cell, not a field): steps from FROM to TO by `step` (default 1) each frame, optionally padded/clamped to run for exactly `over` frames total. `pingpong` bounces back down to FROM once it reaches TO instead of holding or wrapping (ADR 0003 D9); `loop` marks the ramp's own end as this table's loop point, the same concept a table verb block's own `loop`/`stop` marks positionally.",
+    example: 'pw ramp 400..800 step 20 pingpong',
+  },
+};

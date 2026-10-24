@@ -1,0 +1,52 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "TempoStmt",
+        "line": 3,
+        "unit": "framesPerBeat",
+        "value": {
+          "kind": "number",
+          "value": 6
+        },
+        "beats": 8,
+        "offset": 1,
+        "meter": null
+      },
+      {
+        "type": "PatternDecl",
+        "line": 4,
+        "name": "riff",
+        "length": 8,
+        "each": null,
+        "elements": null,
+        "source": "c4 e4 g4 c5 g4 e4 c4 ~",
+        "docStart": 160,
+        "docEnd": 182
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 5,
+        "index": 0,
+        "instrumentName": null,
+        "notes": {
+          "isSigil": true,
+          "sigilName": "riff"
+        },
+        "arrangement": null,
+        "inlineAttrs": [
+          {
+            "name": "wave",
+            "values": [
+              "pulse"
+            ]
+          }
+        ],
+        "transforms": []
+      }
+    ]
+  }
+}

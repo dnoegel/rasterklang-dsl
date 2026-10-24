@@ -1,0 +1,101 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "InstrumentBlock",
+        "line": 1,
+        "name": "lead",
+        "fields": [
+          {
+            "type": "wave",
+            "line": 2,
+            "tokens": [
+              "triangle",
+              "pulse",
+              "triangle",
+              "noise"
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "arp",
+            "line": 3,
+            "tokens": [
+              0,
+              4,
+              7,
+              12
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "pw",
+            "line": 4,
+            "tokens": [
+              2048,
+              2400
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "filterTable",
+            "line": 5,
+            "tokens": [
+              0,
+              20,
+              40
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "adsr",
+            "line": 6,
+            "a": 0,
+            "d": 9,
+            "s": 0,
+            "r": 0
+          },
+          {
+            "type": "loop",
+            "line": 7,
+            "value": 2
+          },
+          {
+            "type": "vib",
+            "line": 8,
+            "depth": 0.15,
+            "rate": 5
+          },
+          {
+            "type": "slide",
+            "line": 9,
+            "time": 0.08
+          },
+          {
+            "type": "test",
+            "line": 10,
+            "tokens": [
+              1,
+              0,
+              0,
+              0
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "gate",
+            "line": 11,
+            "value": 0.5
+          }
+        ]
+      }
+    ]
+  }
+}

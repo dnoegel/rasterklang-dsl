@@ -1,0 +1,94 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "InstrumentBlock",
+        "line": 2,
+        "name": "lead",
+        "fields": [
+          {
+            "type": "wave",
+            "line": 3,
+            "tokens": [
+              "pulse"
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "gate",
+            "line": 4,
+            "mode": "legato"
+          }
+        ]
+      },
+      {
+        "type": "InstrumentBlock",
+        "line": 6,
+        "name": "perc",
+        "fields": [
+          {
+            "type": "wave",
+            "line": 7,
+            "tokens": [
+              "noise"
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "gate",
+            "line": 8,
+            "value": -2
+          }
+        ]
+      },
+      {
+        "type": "TempoStmt",
+        "line": 10,
+        "unit": "bpm",
+        "value": {
+          "kind": "number",
+          "value": 120
+        },
+        "beats": 4,
+        "offset": null,
+        "meter": null
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 11,
+        "index": 0,
+        "instrumentName": "lead",
+        "notes": {
+          "isSigil": false,
+          "source": "c4 g4",
+          "docStart": 183,
+          "docEnd": 188
+        },
+        "arrangement": null,
+        "inlineAttrs": [],
+        "transforms": []
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 12,
+        "index": 1,
+        "instrumentName": "perc",
+        "notes": {
+          "isSigil": false,
+          "source": "c3 c3 c3 c3",
+          "docStart": 204,
+          "docEnd": 215
+        },
+        "arrangement": null,
+        "inlineAttrs": [],
+        "transforms": []
+      }
+    ]
+  }
+}

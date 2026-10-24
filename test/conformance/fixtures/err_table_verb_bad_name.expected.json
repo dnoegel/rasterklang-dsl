@@ -1,0 +1,5 @@
+{
+  "ok": false,
+  "line": 3,
+  "message": "line 3: unknown table verb 'bogus' (expected set/add/wait/loop/stop)"
+}

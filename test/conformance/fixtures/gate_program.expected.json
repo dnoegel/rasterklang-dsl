@@ -1,0 +1,46 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "InstrumentBlock",
+        "line": 1,
+        "name": "perc",
+        "fields": [
+          {
+            "type": "wave",
+            "line": 2,
+            "tokens": [
+              "noise"
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "adsr",
+            "line": 3,
+            "a": 0,
+            "d": 2,
+            "s": 0,
+            "r": 2
+          },
+          {
+            "type": "gate",
+            "line": 4,
+            "tokens": [
+              1,
+              1,
+              0,
+              1,
+              1,
+              0
+            ],
+            "speed": null,
+            "delay": null
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "VoiceStmt",
+        "mode": "extended",
+        "line": 1,
+        "index": 0,
+        "instrumentName": null,
+        "fields": [
+          {
+            "type": "notes",
+            "line": 2,
+            "isSigil": false,
+            "source": "c2 ~ c2 ~",
+            "docStart": 17,
+            "docEnd": 26
+          },
+          {
+            "type": "insts",
+            "line": 3,
+            "source": "bass bass drum bass",
+            "docStart": 37,
+            "docEnd": 56
+          },
+          {
+            "type": "sync",
+            "line": 4,
+            "value": {
+              "kind": "number",
+              "value": 1
+            }
+          },
+          {
+            "type": "ring",
+            "line": 5,
+            "value": {
+              "kind": "pattern",
+              "source": "1 0"
+            }
+          },
+          {
+            "type": "wave",
+            "line": 6,
+            "source": "pulse|triangle",
+            "docStart": 88,
+            "docEnd": 102
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "InstrumentBlock",
+        "line": 3,
+        "name": "lead",
+        "fields": [
+          {
+            "type": "wave",
+            "line": 4,
+            "tokens": [
+              "pulse"
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "vibTri",
+            "line": 5,
+            "cmp": 5,
+            "speedShift": 3,
+            "delay": 8
+          }
+        ]
+      },
+      {
+        "type": "InstrumentBlock",
+        "line": 8,
+        "name": "bass",
+        "fields": [
+          {
+            "type": "wave",
+            "line": 9,
+            "tokens": [
+              "triangle"
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "vibTri",
+            "line": 10,
+            "cmp": 16,
+            "speed": 100,
+            "delay": 0
+          }
+        ]
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 13,
+        "index": 0,
+        "instrumentName": "lead",
+        "notes": {
+          "isSigil": false,
+          "source": "c4 e4",
+          "docStart": 261,
+          "docEnd": 266
+        },
+        "arrangement": null,
+        "inlineAttrs": [],
+        "transforms": []
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 14,
+        "index": 1,
+        "instrumentName": null,
+        "notes": {
+          "isSigil": false,
+          "source": "c2",
+          "docStart": 277,
+          "docEnd": 279
+        },
+        "arrangement": null,
+        "inlineAttrs": [
+          {
+            "name": "vibTri",
+            "values": [
+              16,
+              100,
+              0
+            ]
+          }
+        ],
+        "transforms": []
+      }
+    ]
+  }
+}

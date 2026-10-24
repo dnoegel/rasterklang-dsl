@@ -1,0 +1,116 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "TempoStmt",
+        "line": 3,
+        "unit": "bpm",
+        "value": {
+          "kind": "number",
+          "value": 120
+        },
+        "beats": 8,
+        "offset": null,
+        "meter": null
+      },
+      {
+        "type": "PatternDecl",
+        "line": 4,
+        "name": "bass",
+        "length": 4,
+        "each": null,
+        "elements": null,
+        "source": "c2 ~ c2 ~",
+        "docStart": 162,
+        "docEnd": 171
+      },
+      {
+        "type": "PatternDecl",
+        "line": 5,
+        "name": "lead",
+        "length": 8,
+        "each": null,
+        "elements": null,
+        "source": "c5@2 e5 g5 c6@4",
+        "docStart": 191,
+        "docEnd": 206
+      },
+      {
+        "type": "PatternDecl",
+        "line": 6,
+        "name": "hats",
+        "length": null,
+        "each": null,
+        "elements": null,
+        "source": "bd*4",
+        "docStart": 224,
+        "docEnd": 228
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 7,
+        "index": 0,
+        "instrumentName": null,
+        "notes": {
+          "isSigil": true,
+          "sigilName": "bass"
+        },
+        "arrangement": null,
+        "inlineAttrs": [
+          {
+            "name": "wave",
+            "values": [
+              "pulse"
+            ]
+          }
+        ],
+        "transforms": []
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 8,
+        "index": 1,
+        "instrumentName": null,
+        "notes": {
+          "isSigil": true,
+          "sigilName": "lead"
+        },
+        "arrangement": null,
+        "inlineAttrs": [
+          {
+            "name": "wave",
+            "values": [
+              "triangle"
+            ]
+          }
+        ],
+        "transforms": []
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 9,
+        "index": 2,
+        "instrumentName": null,
+        "notes": {
+          "isSigil": true,
+          "sigilName": "hats"
+        },
+        "arrangement": null,
+        "inlineAttrs": [
+          {
+            "name": "wave",
+            "values": [
+              "noise"
+            ]
+          }
+        ],
+        "transforms": []
+      }
+    ]
+  }
+}

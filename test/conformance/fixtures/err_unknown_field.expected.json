@@ -1,0 +1,5 @@
+{
+  "ok": false,
+  "line": 2,
+  "message": "line 2: unknown instrument field 'bogus' (expected wave/adsr/pw/arp/filterTable/loop/vib/vibTri/slide/test/gate/hardRestart)"
+}

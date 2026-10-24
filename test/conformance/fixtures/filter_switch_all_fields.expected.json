@@ -1,0 +1,154 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "FilterBlock",
+        "line": 1,
+        "fields": [
+          {
+            "type": "cutoff",
+            "line": 2,
+            "expr": {
+              "type": "SignalExpr",
+              "line": 2,
+              "signal": "sine",
+              "range": {
+                "lo": 300,
+                "hi": 2200
+              },
+              "speeds": [
+                {
+                  "op": "/",
+                  "value": 4
+                }
+              ]
+            }
+          },
+          {
+            "type": "resonance",
+            "line": 3,
+            "expr": {
+              "type": "SwitchBlock",
+              "line": 3,
+              "cases": [
+                {
+                  "line": 4,
+                  "cond": {
+                    "op": "<",
+                    "value": 4
+                  },
+                  "value": {
+                    "type": "SignalExpr",
+                    "line": 4,
+                    "signal": "saw",
+                    "range": {
+                      "lo": 4,
+                      "hi": 15
+                    },
+                    "speeds": [
+                      {
+                        "op": "/",
+                        "value": 2
+                      }
+                    ]
+                  }
+                },
+                {
+                  "line": 5,
+                  "cond": {
+                    "op": "else"
+                  },
+                  "value": {
+                    "type": "NumberListExpr",
+                    "line": 5,
+                    "values": [
+                      15
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "mode",
+            "line": 6,
+            "expr": {
+              "type": "SwitchBlock",
+              "line": 6,
+              "cases": [
+                {
+                  "line": 7,
+                  "cond": {
+                    "op": "<",
+                    "value": 8
+                  },
+                  "value": {
+                    "type": "SignalExpr",
+                    "line": 7,
+                    "signal": "lowpass",
+                    "range": null,
+                    "speeds": []
+                  }
+                },
+                {
+                  "line": 8,
+                  "cond": {
+                    "op": "else"
+                  },
+                  "value": {
+                    "type": "SignalExpr",
+                    "line": 8,
+                    "signal": "bandpass",
+                    "range": null,
+                    "speeds": []
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "type": "route",
+            "line": 9,
+            "expr": {
+              "type": "SwitchBlock",
+              "line": 9,
+              "cases": [
+                {
+                  "line": 10,
+                  "cond": {
+                    "op": "<",
+                    "value": 8
+                  },
+                  "value": {
+                    "type": "NumberListExpr",
+                    "line": 10,
+                    "values": [
+                      0,
+                      1
+                    ]
+                  }
+                },
+                {
+                  "line": 11,
+                  "cond": {
+                    "op": "else"
+                  },
+                  "value": {
+                    "type": "NumberListExpr",
+                    "line": 11,
+                    "values": [
+                      1,
+                      2
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

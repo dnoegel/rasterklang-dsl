@@ -1,0 +1,5 @@
+{
+  "ok": false,
+  "line": 1,
+  "message": "line 1: unterminated string literal (no closing '\"' before end of line)"
+}
