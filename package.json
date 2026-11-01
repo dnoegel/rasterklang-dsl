@@ -1,6 +1,6 @@
 {
   "name": "rasterklang-dsl",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A text notation for writing C64 SID music: grammar, parser and interpreter (research project)",
   "license": "MIT",
   "author": "Daniel Nögel",
