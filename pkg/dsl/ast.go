@@ -51,6 +51,9 @@ type TempoStmt struct {
 	// Mutually exclusive with Beats: the semantic layer rejects both on one
 	// statement.
 	Meter *Meter
+	// Groove is nil when the 'groove N' clause was omitted (ADR 0005 D5):
+	// with `speed`, every other beat lasts this many frames (funktempo).
+	Groove *int
 }
 
 // Meter is `meter N/D`: a bar is Numerator beats, and one beat is a
@@ -83,6 +86,10 @@ type TargetStmt struct {
 	Video       string // "PAL" | "NTSC" | "" (omitted)
 	DriveCycles *int
 	Multispeed  *int
+	// Pitch is "" unless `pitch PAL|NTSC` was given (ADR 0006 D4): the clock
+	// the note table is computed at. Tuning is nil unless `tuning CENTS` was.
+	Pitch  string
+	Tuning *float64
 }
 
 // === chip_stmt ================================================================
@@ -315,6 +322,17 @@ type InstGateField struct {
 	Speed, Delay *int
 	Mode         string
 	Verbs        []TableVerb
+	// HardRestart is nil unless `hardRestart N` carried clauses (ADR 0005 D4).
+	HardRestart *HardRestartSpec
+}
+
+// HardRestartSpec is what a `hardRestart N` window writes besides dropping
+// the gate: AD and SR nibble pairs (nil to keep the instrument's) and the
+// test bit.
+type HardRestartSpec struct {
+	AD, SR      *[2]int
+	Test        bool
+	BeforeNotes bool
 }
 
 // === voice_stmt ==============================================================

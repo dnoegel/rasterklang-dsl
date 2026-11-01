@@ -199,6 +199,7 @@ function buildTempoStmt(ctx) {
   let beats = null;
   let offset = null;
   let meter = null;
+  let groove = null;
   for (const sc of ctx.tempoSetting()) {
     const name = ident(sc.anyIdent());
     const numbers = sc.NUMBER();
@@ -217,14 +218,24 @@ function buildTempoStmt(ctx) {
         fail(line, `meter's numerator and denominator must be integers, got ${value_}/${denominator}`);
       }
       meter = { numerator: value_, denominator };
+    } else if (name === 'groove') {
+      // ADR 0005 D5: funktempo, every other beat lasts this many frames.
+      if (numbers.length > 1) fail(line, `'groove' takes a single number of frames, not a fraction`);
+      if (!Number.isInteger(value_) || value_ <= 0) fail(line, `'groove' must be a positive integer number of frames, got ${value_}`);
+      if (unit !== 'framesPerBeat') fail(line, `'groove' counts frames, so it needs 'speed N' (frames per beat), not 'tempo' (BPM)`);
+      groove = value_;
     } else {
-      fail(line, `expected 'meter', 'beats' or 'offset', found '${name}'`);
+      fail(line, `expected 'meter', 'beats', 'offset' or 'groove', found '${name}'`);
     }
+  }
+  if (groove != null && value.kind === 'pattern') {
+    fail(line, `'groove' needs a constant 'speed N'; a speed pattern and a groove have no defined combination`);
   }
   if (beats != null && meter != null) {
     fail(line, `a tempo statement cannot combine 'meter' and 'beats' - 'beats' is deprecated in favor of 'meter N/4', use one or the other`);
   }
-  return { type: 'TempoStmt', line, unit, value, beats, offset, meter };
+  // `groove` is only present when given, so every existing AST is unchanged.
+  return { type: 'TempoStmt', line, unit, value, beats, offset, meter, ...(groove != null ? { groove } : {}) };
 }
 
 // ADR 0002's `target { ... }` block: the song's DRIVE rate, i.e. how many
@@ -240,6 +251,8 @@ function buildTargetStmt(ctx) {
   let video = null;
   let driveCycles = null;
   let multispeed = null;
+  let pitch = null;
+  let tuning = null;
   for (const setting of ctx.targetSetting()) {
     const idents = setting.anyIdent();
     const name = ident(idents[0]);
@@ -272,8 +285,26 @@ function buildTargetStmt(ctx) {
         multispeed = v;
         break;
       }
+      case 'pitch': {
+        // ADR 0006 D4: which machine's clock the note table is computed at.
+        if (!wordCtx) fail(line, `'pitch' takes a video standard (${VIDEO_STANDARDS.join(' or ')}), not a number`);
+        const word = ident(wordCtx);
+        if (!VIDEO_STANDARDS.includes(word)) fail(line, `unknown video standard '${word}' (expected ${VIDEO_STANDARDS.join(' or ')})`);
+        if (pitch !== null) fail(line, "'pitch' given twice in one target block");
+        pitch = word;
+        break;
+      }
+      case 'tuning': {
+        // ADR 0006 D4: shift every note by this many cents.
+        if (!numTerm) fail(line, "'tuning' takes a number of cents, e.g. 'tuning 40' or 'tuning -12.5'");
+        const v = numOf(numTerm);
+        if (!(Math.abs(v) <= 1200)) fail(line, `tuning must be within -1200..1200 cents, got ${v}`);
+        if (tuning !== null) fail(line, "'tuning' given twice in one target block");
+        tuning = v;
+        break;
+      }
       default:
-        fail(line, `expected 'video', 'driveCycles' or 'multispeed' in a target block, found '${name}'`);
+        fail(line, `expected 'video', 'driveCycles', 'multispeed', 'pitch' or 'tuning' in a target block, found '${name}'`);
     }
   }
   // driveCycles already IS the answer multispeed exists to compute, so
@@ -282,7 +313,12 @@ function buildTargetStmt(ctx) {
   if (driveCycles !== null && multispeed !== null) {
     fail(line, "'driveCycles' and 'multispeed' are two spellings of the same thing; give one, not both");
   }
-  return { type: 'TargetStmt', line, video, driveCycles, multispeed };
+  // pitch/tuning are only present when given, so every existing AST is unchanged.
+  return {
+    type: 'TargetStmt', line, video, driveCycles, multispeed,
+    ...(pitch !== null ? { pitch } : {}),
+    ...(tuning !== null ? { tuning } : {}),
+  };
 }
 
 // ADR 0003 D15's `chip 6581` / `chip 8580`: which SID model this song was
@@ -541,14 +577,48 @@ function buildInstrumentField(ctx) {
       // gatetimer) - compiles to the exact same AST shape a numeric
       // 'gate -N' field would, so it is a spelling, not a third gate
       // representation compile.js/instrument.js need to know about.
-      if (tokens.length !== 1 || typeof tokens[0] !== 'number') fail(line, "'hardRestart' expects 1 number of frames");
+      if (tokens.length < 1 || typeof tokens[0] !== 'number') fail(line, "'hardRestart' expects 1 number of frames");
       const n = tokens[0];
       if (!Number.isInteger(n) || n <= 0) fail(line, `'hardRestart' must be a positive integer number of frames, got ${n}`);
-      return { type: 'gate', line, value: -n };
+      if (tokens.length === 1) return { type: 'gate', line, value: -n };
+      // ADR 0005 D4: optional `ad A D`, `sr S R` and `test` clauses for the
+      // hard-restart frames, carried as an extra key so a plain
+      // `hardRestart N` keeps exactly the AST it always had.
+      return { type: 'gate', line, value: -n, hardRestart: parseHardRestartClauses(tokens.slice(1), line) };
     }
     default:
       return fail(line, `unknown instrument field '${name}' (expected ${INSTRUMENT_FIELDS.join('/')})`);
   }
+}
+
+// parseHardRestartClauses(tokens, line) -> { ad, sr, test, beforeNotes } for
+// the clauses after `hardRestart N` (ADR 0005 D4, ADR 0006 D5): `ad A D` and
+// `sr S R` (nibbles, null when absent) and the bare flags `test` and
+// `beforeNotes`, in any order, each at most once.
+function parseHardRestartClauses(tokens, line) {
+  const out = { ad: null, sr: null, test: false, beforeNotes: false };
+  const seen = new Set();
+  let i = 0;
+  while (i < tokens.length) {
+    const word = tokens[i];
+    if (word !== 'ad' && word !== 'sr' && word !== 'test' && word !== 'beforeNotes') {
+      fail(line, `'hardRestart' clauses are 'ad A D', 'sr S R', 'test' and 'beforeNotes', found ${JSON.stringify(word)}`);
+    }
+    if (seen.has(word)) fail(line, `'hardRestart' has '${word}' twice`);
+    seen.add(word);
+    if (word === 'test' || word === 'beforeNotes') {
+      out[word] = true;
+      i += 1;
+      continue;
+    }
+    const pair = tokens.slice(i + 1, i + 3);
+    if (pair.length !== 2 || pair.some((v) => typeof v !== 'number' || !Number.isInteger(v) || v < 0 || v > 15)) {
+      fail(line, `'hardRestart ${word}' expects two nibbles 0-15, e.g. '${word} 0 0'`);
+    }
+    out[word] = pair;
+    i += 3;
+  }
+  return out;
 }
 
 // parseVibTriSpeed(token) -> { speed } for a plain number, or { speedShift }

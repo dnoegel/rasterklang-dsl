@@ -465,24 +465,30 @@ export function declaredLengthCandidates(source, beatUnit = DEFAULT_BEAT_UNIT, r
 // A hold after a REST extends the rest the same way (`"c4 _ ~ _"` ->
 // `"c4@2 ~@2"`), which is how "ring two beats then release for two" is
 // spelled.
+//
+// A hold with nothing before it in its sequence (ADR 0006 D1) continues
+// whatever sounds at that point in time: the last note of the previous bar,
+// of the previous alternation entry, or of the step before an enclosing
+// group. It cannot be folded into a weight, so it stays in the text as a
+// bare `_` (with the summed weight of a run of leading holds), which the
+// pattern parser turns into a tie Hap and compile.js plays as a legato
+// continuation of the sounding note, or as silence if none sounds.
 function renderSteps(steps, path) {
   const folded = [];
+  let leadingHold = 0;
   for (const step of steps) {
     if (step.kind === 'hold') {
       const prev = folded[folded.length - 1];
-      if (!prev) {
-        throw new Error(
-          `the hold token '_' extends the step before it, but there is no step before it${path ? ` (inside ${path})` : ''} - start the sequence with a note or a rest.`,
-        );
-      }
       // A hold's own `@n`/`!n` say how MANY steps' worth of ring it adds.
-      prev.extra += step.weight * step.replicate;
+      if (!prev) leadingHold += step.weight * step.replicate;
+      else prev.extra += step.weight * step.replicate;
       continue;
     }
     folded.push({ step, extra: 0 });
   }
 
   const out = [];
+  if (leadingHold > 0) out.push(leadingHold === 1 ? '_' : `_@${formatNumber(leadingHold)}`);
   for (const { step, extra } of folded) {
     const body = renderStepBody(step);
     if (extra === 0) {

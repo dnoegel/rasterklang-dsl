@@ -584,24 +584,32 @@ type foldedStep struct {
 	extra float64
 }
 
+// A hold with nothing before it in its sequence (ADR 0006 D1) continues
+// whatever sounds at that point; it stays a bare `_` (with the summed weight
+// of a run of leading holds). Mirrors miniLength.js's renderSteps.
 func renderSteps(steps []*miniStep, path string) (string, error) {
 	var folded []foldedStep
+	leadingHold := 0.0
 	for _, step := range steps {
 		if step.kind == stepHold {
 			if len(folded) == 0 {
-				where := ""
-				if path != "" {
-					where = " (inside " + path + ")"
-				}
-				return "", fmt.Errorf("the hold token '_' extends the step before it, but there is no step before it%s - start the sequence with a note or a rest.", where)
+				leadingHold += step.weight * float64(step.replicate)
+			} else {
+				folded[len(folded)-1].extra += step.weight * float64(step.replicate)
 			}
-			folded[len(folded)-1].extra += step.weight * float64(step.replicate)
 			continue
 		}
 		folded = append(folded, foldedStep{step: step})
 	}
 
-	out := make([]string, 0, len(folded))
+	out := make([]string, 0, len(folded)+1)
+	if leadingHold > 0 {
+		if leadingHold == 1 {
+			out = append(out, "_")
+		} else {
+			out = append(out, "_@"+formatMiniNumber(leadingHold))
+		}
+	}
 	for _, f := range folded {
 		body, err := renderStepBody(f.step)
 		if err != nil {

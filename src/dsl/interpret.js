@@ -31,7 +31,7 @@ import {
   struct, mask, chunk, palindrome, linger, rot, someCyclesBy, scale,
 } from 'rasterklang-score/pattern/combinators.js';
 import { instrument } from './instrument.js';
-import { parseFxToken } from './fx.js';
+import { parseFxToken, FX_TABLE_OPS } from './fx.js';
 import { analyzeProgram, patternBeatsOf } from './analyze.js';
 import { expandHolds, expandEach } from './miniLength.js';
 import { resolveTarget } from './driveRate.js';
@@ -713,6 +713,9 @@ function buildInstrumentFromBlockFields(fields, tables) {
         if (f.tokens) opts.gateTable = f.tokens;
         else if (f.mode) opts.gateMode = f.mode;
         else opts.gate = f.value;
+        // ADR 0005 D4 / ADR 0006 D5: `hardRestart N ad .. sr .. test
+        // beforeNotes` clauses.
+        if (f.hardRestart) opts.hardRestart = f.hardRestart;
         break;
       default:
         throw new Error(`line ${f.line}: unknown instrument field '${f.type}'.`);
@@ -866,6 +869,12 @@ function resolveRegTarget(target, voiceIndex, line) {
 // \n ... \n end`), since both reference an `instrument` block by name the
 // same way.
 function resolveNamedInstrument(name, instruments, vstmt) {
+  if (name === '_') {
+    throw new Error(
+      `line ${vstmt.line}: voice ${vstmt.index}: a hold '_' with nothing before it continues a NOTE (ADR 0006 D1); ` +
+        'an `insts` pattern has to start each sequence with an instrument name or a rest.',
+    );
+  }
   const found = instruments.get(name);
   if (!found) {
     throw new Error(
@@ -1221,7 +1230,7 @@ function buildVoiceChain(vstmt, ctx) {
     const fxTokens = parseMini(expandHolds(fxPatternSource));
     const resolvedFxPattern = mapPatternValues(fxTokens, (token) => {
       try {
-        return parseFxToken(token);
+        return resolveFxTable(parseFxToken(token), ctx.tables);
       } catch (e) {
         throw new Error(`line ${vstmt.line}: voice ${vstmt.index}: ${e.message}`);
       }
@@ -1235,6 +1244,36 @@ function buildVoiceChain(vstmt, ctx) {
   }
 
   return chain;
+}
+
+// resolveFxTable(fx, tables) -> fx, with a table op's (ADR 0005 D1) name
+// replaced by the declared table's values and loop index, the form
+// compile.js samples. Voice chains are built after the whole statement list
+// has been read, so a table declared anywhere in the song is visible.
+function resolveFxTable(fx, tables) {
+  const kind = FX_TABLE_OPS[fx.op];
+  if (!kind) return fx;
+  const name = fx.a.table;
+  const resolved = tables.get(name);
+  if (!resolved) {
+    const known = [...tables.keys()];
+    throw new Error(
+      `fx '${fx.op}.${name}': unknown table '${name}'${known.length > 0 ? ` (declared tables: ${known.join(', ')})` : ' (no `table` declarations in this song)'}.`,
+    );
+  }
+  if (kind === 'pw' || kind === 'filterTable') {
+    const word = resolved.values.find((v) => typeof v !== 'number');
+    if (word !== undefined) {
+      throw new Error(`fx '${fx.op}.${name}': table '${name}' holds ${JSON.stringify(word)}, but a ${kind} table takes numbers only.`);
+    }
+  } else if (kind === 'arp') {
+    const bad = resolved.values.find((v) => typeof v !== 'number' && !(v && typeof v === 'object' && typeof v.absNote === 'number'));
+    if (bad !== undefined) {
+      throw new Error(`fx '${fx.op}.${name}': table '${name}' holds ${JSON.stringify(bad)}, but an arp table takes semitone offsets or =MIDI cells only.`);
+    }
+  }
+  const loopIndex = fx.b ? fx.b.value : (resolved.loopIndex ?? 0);
+  return { op: fx.op, kind, table: resolved.values, loopIndex };
 }
 
 // === Filter =====================================================================
@@ -1613,7 +1652,16 @@ export function interpret(ast, options = {}) {
   // to cycle, which is not covered yet). Uses the same rounding as the
   // compiler's frames-per-bar clock, so this reports exactly what compile()
   // will produce and changes no emitted frame itself.
-  if (tempoNode.value.kind !== 'pattern' && tempoArg > 0) {
+  // ADR 0005 D5: `speed N groove M` alternates beats of N and M frames. The
+  // D17 diagnostics below assume uniform beats, so a grooved song gets one
+  // info line naming both lengths instead.
+  const grooveFrames = tempoNode.groove != null ? [tempoNode.value.value, tempoNode.groove] : null;
+  if (grooveFrames) {
+    softDiagnostics.push(
+      diag('info', tempoNode.line, `meter ${beats}/${analysis.beatUnit}, groove: beats alternate ${grooveFrames[0]} and ${grooveFrames[1]} frames, counted from the song's start.`),
+    );
+  }
+  if (!grooveFrames && tempoNode.value.kind !== 'pattern' && tempoArg > 0) {
     const bpm = tempoArg;
     const framesPerBeatExact = FRAMES_PER_MINUTE_BASE / bpm;
     const framesPerBar = Math.round(framesPerBeatExact * beats);
@@ -1708,10 +1756,16 @@ export function interpret(ast, options = {}) {
     // arithmetic and any renderer read the same declared rate instead of
     // assuming PAL 50.
     driveCycles: drive.driveCycles,
+    // ADR 0006 D4: the note table's clock and tuning, null/0 for the PAL
+    // equal-tempered A=440 table every song had before.
+    noteClockHz: drive.noteClockHz,
+    tuningCents: drive.tuningCents,
     cpuClockHz: drive.cpuClockHz,
     // ADR 0003 D15: which SID model this song declares itself against, or
     // null for "no opinion" (the consumer's own default applies).
     chipModel,
+    // ADR 0005 D5: per-beat frame counts, cycled from the song's first beat.
+    grooveFrames,
   });
 
   for (const vstmt of voiceStmts) {

@@ -164,9 +164,10 @@ describe('D6: the hold token', () => {
     expect(errors(`${CLOCK}pattern lead 4 = "c5 _ ~ _"\nvoice 0 $lead\n`)).toEqual([]);
   });
 
-  it('rejects a hold with nothing before it', () => {
-    const [msg] = errors(`${CLOCK}voice 0 "_ c4"\n`);
-    expect(msg).toContain("hold token '_'");
+  // Rejected until ADR 0006 D1, which gives it a meaning: it ties over the
+  // note sounding before it (see playerIdioms2.test.js for how it plays).
+  it('accepts a hold with nothing before it', () => {
+    expect(errors(`${CLOCK}voice 0 "_ c4"\n`)).toEqual([]);
   });
 });
 

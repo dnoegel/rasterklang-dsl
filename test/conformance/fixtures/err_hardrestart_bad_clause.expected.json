@@ -1,0 +1,5 @@
+{
+  "ok": false,
+  "line": 5,
+  "message": "line 5: 'hardRestart ad' expects two nibbles 0-15, e.g. 'ad 0 0'"
+}

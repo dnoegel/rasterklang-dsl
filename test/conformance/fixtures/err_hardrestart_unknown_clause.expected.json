@@ -1,0 +1,5 @@
+{
+  "ok": false,
+  "line": 5,
+  "message": "line 5: 'hardRestart' clauses are 'ad A D', 'sr S R', 'test' and 'beforeNotes', found \"release\""
+}

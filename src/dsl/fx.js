@@ -71,6 +71,48 @@ export const FX_OPS = {
   fcut: 1,
   // CMD_SETMASTERVOL (0x0d): set the master volume nibble, 0-15.
   vol: 1,
+  // ADR 0005 D1: start a named `table` declaration from this row, in place
+  // of this voice's instrument table of that kind, until the next note
+  // onset. The DSL's spelling of CMD_SETWAVEPTR (0x08, wave and note
+  // columns), CMD_SETPULSEPTR (0x09) and CMD_SETFILTERPTR (0x0a): instead of
+  // an index into one global table, the importer names each jump target.
+  // Param: the table's name, then an optional loop index.
+  wtab: 1,
+  atab: 1,
+  ptab: 1,
+  ftab: 1,
+  // ADR 0005 D2: song-global filter control, sticky like fcut/vol. `res.N`
+  // and `route.M` are $D417's two nibbles, `fmode.N` is $D418's high nibble
+  // (1 lowpass, 2 bandpass, 4 highpass, 8 voice 3 off), `fctl.R.M` is
+  // CMD_SETFILTERCTRL (0x0b), both $D417 nibbles in one row.
+  res: 1,
+  route: 1,
+  fmode: 1,
+  fctl: 2,
+  // ADR 0005 D3: per-frame sweeps while the fx step is active, the pulse and
+  // cutoff counterparts of pup/pdn. `pws.D` adds D to the pulse width
+  // (12-bit wrap), `pwm.LO.HI.S` bounces it between LO and HI by S,
+  // `fsw.D` adds D to the cutoff in GoatTracker's 8-bit units (8-bit wrap,
+  // as gplay.c's filtercutoff, see ADR 0004).
+  pws: 1,
+  pwm: 3,
+  fsw: 1,
+};
+
+// Ops whose parameter count may exceed FX_OPS's: a table op takes an
+// optional loop index after the name.
+const FX_MAX_ARITY = { wtab: 2, atab: 2, ptab: 2, ftab: 2 };
+
+export const FX_TABLE_OPS = { wtab: 'wave', atab: 'arp', ptab: 'pw', ftab: 'filterTable' };
+
+// Plain-integer ranges checked at parse time (ADR 0005): out of range is an
+// error, not a clamp, for the reason given for `pw` below.
+const FX_RANGES = {
+  res: [[0, 15]],
+  route: [[0, 15]],
+  fmode: [[0, 15]],
+  fctl: [[0, 15], [0, 15]],
+  pwm: [[0, 4095], [0, 4095], [1, 4095]],
 };
 
 // A parameter is either a plain integer, or `sN` - "shift-derived": gplay.c
@@ -88,11 +130,15 @@ function parseParam(text, token) {
 }
 
 // parseFxToken(token) -> a plain effect object compile.js consumes:
-// { op, a, b } where a/b are each { value } or { shift }. Throws with the
+// { op, a, b, c } where each parameter is { value } or { shift } (or, for a
+// table op's first, { table }). Throws with the
 // offending token quoted for anything unknown or mis-arity'd.
 export function parseFxToken(token) {
   if (typeof token !== 'string') {
     throw new Error(`fx pattern: expected an effect token, got ${JSON.stringify(token)}.`);
+  }
+  if (token === '_') {
+    throw new Error("fx pattern: a hold '_' with nothing before it continues a NOTE (ADR 0006 D1); an fx pattern has to start each sequence with an effect token or a rest.");
   }
   const parts = token.split('.');
   const op = parts[0];
@@ -101,12 +147,49 @@ export function parseFxToken(token) {
     throw new Error(`fx token '${token}': unknown effect '${op}' (expected one of ${Object.keys(FX_OPS).join('/')}).`);
   }
   const args = parts.slice(1);
-  if (args.length !== arity) {
-    throw new Error(`fx token '${token}': effect '${op}' takes exactly ${arity} parameter(s), got ${args.length}.`);
+  const maxArity = FX_MAX_ARITY[op] ?? arity;
+  if (args.length < arity || args.length > maxArity) {
+    const expected = maxArity === arity ? `exactly ${arity}` : `${arity} to ${maxArity}`;
+    throw new Error(`fx token '${token}': effect '${op}' takes ${expected} parameter(s), got ${args.length}.`);
   }
   const out = { op };
+  if (FX_TABLE_OPS[op]) {
+    // ADR 0005 D1: the first parameter names a `table` declaration, resolved
+    // against the song's tables by interpret.js; the second is a loop index.
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(args[0])) {
+      throw new Error(`fx token '${token}': '${op}' takes a table name, got '${args[0]}'.`);
+    }
+    out.a = { table: args[0] };
+    if (args.length > 1) {
+      if (!/^[0-9]+$/.test(args[1])) {
+        throw new Error(`fx token '${token}': the loop index of '${op}' must be a non-negative integer, got '${args[1]}'.`);
+      }
+      out.b = { value: Number(args[1]) };
+    }
+    return out;
+  }
   if (arity >= 1) out.a = parseParam(args[0], token);
   if (arity >= 2) out.b = parseParam(args[1], token);
+  if (arity >= 3) out.c = parseParam(args[2], token);
+  const ranges = FX_RANGES[op];
+  if (ranges) {
+    const params = [out.a, out.b, out.c];
+    ranges.forEach(([lo, hi], i) => {
+      const p = params[i];
+      if (p.shift !== undefined) {
+        throw new Error(`fx token '${token}': '${op}' takes plain integers; the shift-derived 'sN' form is frequency-only.`);
+      }
+      if (p.value < lo || p.value > hi) {
+        throw new Error(`fx token '${token}': parameter ${i + 1} of '${op}' is ${p.value}, must be ${lo}-${hi}.`);
+      }
+    });
+    if (op === 'pwm' && out.a.value >= out.b.value) {
+      throw new Error(`fx token '${token}': 'pwm' needs LO < HI, got ${out.a.value} and ${out.b.value}.`);
+    }
+  }
+  if ((op === 'pws' || op === 'fsw') && out.a.shift !== undefined) {
+    throw new Error(`fx token '${token}': '${op}' takes a plain integer; the shift-derived 'sN' form is frequency-only.`);
+  }
   // `pw` is the one op whose parameter has a hard, non-negotiable domain:
   // the SID's pulse width is 12 bits ($02/$03 per voice), so anything
   // outside 0..4095 is a scaling mistake, not a value. Rejecting it here

@@ -19,15 +19,15 @@ export const FIELD_DOCS = {
     example: 'tempo 120 meter 4/4 offset 1',
   },
   speed: {
-    signature: 'speed NUMBER|STRING [meter INT/INT | beats INT] [offset NUMBER]',
+    signature: 'speed NUMBER|STRING [meter INT/INT | beats INT] [offset NUMBER] [groove INT]',
     description:
-      'Sets the song clock in FRAMES PER BEAT instead of BPM - the exact, frame-native spelling of `tempo`, and the one GoatTracker data is already in. `speed 6` is 6 PAL frames per beat, i.e. 500 BPM, with no rounding anywhere: `tempo 132 beats 8` computes 181.8 frames per bar and has to round, `speed 6 beats 8` is exactly 48. Takes the same `meter`/`beats`/`offset` suffixes as `tempo`. Mutually exclusive with `tempo`: a song has exactly one clock statement, and having neither or both is a compile error.',
+      'Sets the song clock in FRAMES PER BEAT instead of BPM - the exact, frame-native spelling of `tempo`, and the one GoatTracker data is already in. `speed 6` is 6 PAL frames per beat, i.e. 500 BPM, with no rounding anywhere: `tempo 132 beats 8` computes 181.8 frames per bar and has to round, `speed 6 beats 8` is exactly 48. Takes the same `meter`/`beats`/`offset` suffixes as `tempo`. `groove M` (ADR 0005 D5, constant `speed` only) is GoatTracker\'s funktempo: beats alternate between N and M frames, counted from the song\'s first beat, so `speed 6 groove 5` plays rows of 6, 5, 6, 5 frames. Mutually exclusive with `tempo`: a song has exactly one clock statement, and having neither or both is a compile error.',
     example: 'speed 6 beats 8',
   },
   target: {
-    signature: 'target { [video PAL|NTSC] [driveCycles INT] [multispeed INT] }',
+    signature: 'target { [video PAL|NTSC] [driveCycles INT] [multispeed INT] [pitch PAL|NTSC] [tuning CENTS] }',
     description:
-      "Declares the song's DRIVE rate: how many CPU cycles pass between two play calls. Where `tempo`/`speed`/`beats` say how long a beat is in frames, this says how long a FRAME is - the thing DSL v2 used to have one hard-coded answer to (PAL, 50.00 calls per second). `driveCycles N` is the exact primitive; `video PAL|NTSC` and `multispeed N` are named shorthands over it (PAL = 19705 cycles at 985248 Hz = 49.99990 fps, NTSC = 17045 at 1022727 Hz = 60.00158 fps, `multispeed 3` = three calls per video frame). Optional, at most one per song; omitting it means PAL 50.00 fps, so no existing song changes meaning. `driveCycles` and `multispeed` together is an error - they compute the same number two ways. Distinct from `chip`: `target` is the DRIVE RATE (how often the player runs), `chip` is the SID MODEL (which chip it runs on) - independent axes.",
+      "Declares the song's DRIVE rate: how many CPU cycles pass between two play calls. Where `tempo`/`speed`/`beats` say how long a beat is in frames, this says how long a FRAME is - the thing DSL v2 used to have one hard-coded answer to (PAL, 50.00 calls per second). `driveCycles N` is the exact primitive; `video PAL|NTSC` and `multispeed N` are named shorthands over it (PAL = 19705 cycles at 985248 Hz = 49.99990 fps, NTSC = 17045 at 1022727 Hz = 60.00158 fps, `multispeed 3` = three calls per video frame). Optional, at most one per song; omitting it means PAL 50.00 fps, so no existing song changes meaning. `driveCycles` and `multispeed` together is an error - they compute the same number two ways. Distinct from `chip`: `target` is the DRIVE RATE (how often the player runs), `chip` is the SID MODEL (which chip it runs on) - independent axes. Since 4.4.0 (ADR 0006 D4) two optional note-table settings: `pitch PAL|NTSC` computes the note table at that machine's clock (without it every song uses the PAL table, so `video NTSC pitch NTSC` makes an NTSC tune sound at its real pitch), and `tuning CENTS` shifts every note, for player tables that sit off A=440.",
     example: 'target { video NTSC }',
   },
   chip: {
@@ -101,10 +101,10 @@ export const FIELD_DOCS = {
     example: 'loop wave 1 filterTable 0',
   },
   hardRestart: {
-    signature: 'hardRestart FRAMES',
+    signature: 'hardRestart FRAMES [ad A D] [sr S R] [test] [beforeNotes]',
     description:
-      "The readable spelling of `gate -FRAMES` (ADR 0003 D11): drops the gate for the note's last FRAMES frames so the NEXT note gets a genuine, frame-observable low-to-high edge (a real SID hard restart), whatever the note's own length. Compiles to exactly the same AST shape `gate -N` does - a spelling, not a second mechanism. Giving both `gate` and `hardRestart` on one instrument is redundant (whichever is written last wins, the same as repeating any other field).",
-    example: 'hardRestart 2',
+      "The readable spelling of `gate -FRAMES` (ADR 0003 D11): drops the gate for the note's last FRAMES frames so the NEXT note gets a genuine, frame-observable low-to-high edge (a real SID hard restart), whatever the note's own length. Compiles to exactly the same AST shape `gate -N` does - a spelling, not a second mechanism. The optional clauses (ADR 0005 D4, any order) apply during those frames when another note follows directly: `ad A D` and `sr S R` write that envelope instead of the instrument's (the classic AD/SR reset before the next attack), `test` sets the test bit. Before a rest the note releases normally. `beforeNotes` (ADR 0006 D5) drops the early release itself before a rest, so a key-off releases at the rest and only a following note gets the restart. Never releases early into a legato transition (a tie, `fx tp`, `slideTo`). Giving both `gate` and `hardRestart` on one instrument is redundant (whichever is written last wins, the same as repeating any other field).",
+    example: 'hardRestart 2 ad 0 0 sr 0 0',
   },
   vib: {
     signature: 'vib DEPTH RATE',
@@ -149,7 +149,7 @@ export const FIELD_DOCS = {
   fx: {
     signature: 'fx STRING',
     description:
-      "Fires one-shot EFFECT COMMANDS per row on this one voice - a quoted mini-notation pattern of effect tokens, structurally parallel to `notes` the way `insts` is. This is the DSL's answer to GoatTracker's per-row command/command-data columns, the one-shot triggers a continuous instrument-level `vib`/`slide` cannot express. Tokens: `pup.N`/`pdn.N` (portamento up/down by N frequency-register units per frame), `tp.N` (tone portamento toward this note at N per frame, also legato - it suppresses the note's gate retrigger), `vib.CMP.SPEED` (GoatTracker's own triangle vibrato), `ad.A.D`/`sr.S.R` (overwrite the envelope registers), `wave.N` (overwrite the waveform bits), `pw.N` (overwrite the pulse width, 0-4095, the same 12-bit domain as an instrument's own `pw` table; ignored when the instrument has a `pw` table of its own, since that table rewrites the register every frame), `fcut.N` (shared filter cutoff), `vol.N` (master volume). A speed parameter may instead be `sN`, meaning \"one semitone at the current note, shifted right by N\". Unlike `insts`, `fx` is sampled on its OWN step boundaries, not at note onsets - a tracker command runs on its row whether or not that row carries a note.",
+      "Fires one-shot EFFECT COMMANDS per row on this one voice - a quoted mini-notation pattern of effect tokens, structurally parallel to `notes` the way `insts` is. This is the DSL's answer to GoatTracker's per-row command/command-data columns, the one-shot triggers a continuous instrument-level `vib`/`slide` cannot express. Tokens: `pup.N`/`pdn.N` (portamento up/down by N frequency-register units per frame), `tp.N` (tone portamento toward this note at N per frame, also legato - it suppresses the note's gate retrigger), `vib.CMP.SPEED` (GoatTracker's own triangle vibrato), `ad.A.D`/`sr.S.R` (overwrite the envelope registers), `wave.N` (overwrite the waveform bits), `pw.N` (overwrite the pulse width, 0-4095, the same 12-bit domain as an instrument's own `pw` table; ignored when the instrument has a `pw` table of its own, since that table rewrites the register every frame), `fcut.N` (shared filter cutoff), `vol.N` (master volume). Since 4.3.0 (ADR 0005): `wtab.NAME`/`atab.NAME`/`ptab.NAME`/`ftab.NAME` start a named `table` in place of this voice's wave/arp/pw/filter table until the next note onset (optional `.L` loop index; GoatTracker's table-pointer commands), `res.N`/`route.M`/`fmode.N`/`fctl.R.M` set the shared filter's resonance, routing, mode nibble and both at once (GoatTracker `Bxx`), and `pws.D`/`pwm.LO.HI.S`/`fsw.D` sweep the pulse width (12-bit wrap), bounce it between LO and HI, and sweep the cutoff in 8-bit units (8-bit wrap) on every frame of their step. A speed parameter may instead be `sN`, meaning \"one semitone at the current note, shifted right by N\". Unlike `insts`, `fx` is sampled on its OWN step boundaries, not at note onsets - a tracker command runs on its row whether or not that row carries a note.",
     example: 'fx "~ tp.24 ~ vib.16.100"',
   },
   reg: {
@@ -321,7 +321,7 @@ export const FIELD_DOCS = {
   _: {
     signature: '_',
     description:
-      "Hold: the previous step keeps sounding for one more step - a tracker's empty row. The opposite of a rest, which cuts the note. `\"c4 _ _ _\"` is one note ringing for four beats; `\"c4 _ ~ ~\"` rings for two and then releases. Holds chain, and `_@2`/`_!2` add that many steps' worth of ring at once.",
+      "Hold: the previous step keeps sounding for one more step - a tracker's empty row. The opposite of a rest, which cuts the note. `\"c4 _ _ _\"` is one note ringing for four beats; `\"c4 _ ~ ~\"` rings for two and then releases. Holds chain, and `_@2`/`_!2` add that many steps' worth of ring at once. A hold with nothing before it (since 4.4.0, ADR 0006 D1) is a TIE: it continues the note sounding at that point, e.g. the previous bar's last note, without a retrigger; silence if none sounds.",
     example: 'pattern lead 8 = "c5 _ _ _ e5 ~ g5 _"',
   },
   '@': {

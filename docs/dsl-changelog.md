@@ -14,6 +14,50 @@ bumps the version.
 Several entries mention a GoatTracker-to-DSL converter. The converter is a separate tool; it is
 mentioned here only where its needs motivated a grammar change.
 
+## 4.4.0
+
+**Tracker-conversion backlog (ADR 0006).** From the converter backlog in
+`docs/tracker-features-todo.md`. Additive spellings, plus three engine fixes that change how
+existing songs play where they hit the defect.
+
+- **A hold with nothing before it is a tie** (was an error): it continues the note sounding at
+  that point, e.g. across a bar line between per-bar patterns, legato, or silence if none sounds.
+- **`target { pitch NTSC }` and `target { tuning CENTS }`:** the note table's clock and a shift in
+  cents. Without them the note table is unchanged.
+- **`hardRestart N beforeNotes`:** release early before a note only, at the rest before a key-off.
+- **Fix: `insts` brings the instrument's own `adsr`.** The per-note instrument's envelope was
+  ignored; the voice chain's was used for every note.
+- **Fix: a legato transition under `gate -N`/`hardRestart`.** A note entered with `fx tp`,
+  `slideTo` (or a tie) inherited the previous note's frame count, so its gate dropped at once and
+  stayed off; and the restart retriggered the note it was tied to. The gate length now counts from
+  the note's own start, and no early release happens into a legato transition. The same counting
+  applies to a fractional `gate`.
+- **Fix: an `arp` table keeps running during a rest,** from the last note, as `wave` and `pw`
+  tables already did.
+
+Measured on 815 songs (785 that compile): 666 change only in AD/SR (all through `insts`), 9 in
+frequency during rests (the arp fix; in one, a following `slide` starts from the new frequency),
+none in gate, pulse width or filter.
+
+## 4.3.0
+
+**Five player idioms for converting real SID tunes (ADR 0005).** Taken from comparing the
+[unitracker](https://github.com/anarkiwi/unitracker) lifters' document format with the open gaps
+of the SID-to-DSL converter and the "deliberately unsupported" rows of the GoatTracker command
+triage. All additive: each spelling was a compile error before, and 785 existing songs render
+byte-identically.
+
+- **Table ops in `fx`:** `wtab.NAME`, `atab.NAME`, `ptab.NAME`, `ftab.NAME` (optional `.L` loop
+  index) start a named `table` in place of the voice's wave/arp/pw/filter table until the next
+  note onset. GoatTracker `8xx`/`9xx`/`Axx`, previously unsupported.
+- **Filter control in `fx`:** `res.N`, `route.M`, `fmode.N` (mode nibble incl. voice 3 off) and
+  `fctl.R.M` (GoatTracker `Bxx`), song-global and sticky like `fcut.N`.
+- **Sweeps in `fx`:** `pws.D` (pulse, 12-bit wrap), `pwm.LO.HI.S` (pulse ping-pong), `fsw.D`
+  (cutoff in 8-bit units, 8-bit wrap as in `gplay.c`), applied every frame of their step.
+- **`hardRestart N ad A D sr S R test`:** optional clauses for what the restart frames write
+  before a following note. A plain `hardRestart N` is unchanged.
+- **`speed N groove M`:** beats alternate between N and M frames (GoatTracker funktempo).
+
 ## 4.2.0
 
 **New `fx` token `pw.N`: a per-row, one-shot pulse-width overwrite.** The `fx` lane already had a

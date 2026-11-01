@@ -87,10 +87,12 @@ export const FILTER_REG_TARGETS = Object.keys(FILTER_REGISTERS);
 // 'video'/'driveCycles'/'multispeed'/VIDEO_STANDARDS are ADR 0002's
 // target-block settings: contextual, only meaningful inside
 // `target { ... }`, same status as 'ramp'/'step'/'over' inside a table row.
+// 'groove' is ADR 0005 D5's funktempo tempo setting; 'pitch'/'tuning' are
+// ADR 0006 D4's target settings.
 export const STRUCTURAL_KEYWORDS = [
-  'end', 'beats', 'offset', 'meter', 'each', 'switch', 'bar', 'cycle', 'else',
+  'end', 'beats', 'offset', 'meter', 'groove', 'each', 'switch', 'bar', 'cycle', 'else',
   'ramp', 'step', 'over', 'pingpong', 'delay',
-  'video', 'driveCycles', 'multispeed', ...VIDEO_STANDARDS,
+  'video', 'driveCycles', 'multispeed', 'pitch', 'tuning', ...VIDEO_STANDARDS,
 ];
 
 // The mini-notation vocabulary INSIDE a quoted pattern string. These are

@@ -1,0 +1,52 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "TargetStmt",
+        "line": 1,
+        "video": "NTSC",
+        "driveCycles": null,
+        "multispeed": null,
+        "pitch": "NTSC",
+        "tuning": -12.5
+      },
+      {
+        "type": "TempoStmt",
+        "line": 2,
+        "unit": "framesPerBeat",
+        "value": {
+          "kind": "number",
+          "value": 6
+        },
+        "beats": 4,
+        "offset": null,
+        "meter": null
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 4,
+        "index": 0,
+        "instrumentName": null,
+        "notes": {
+          "isSigil": false,
+          "source": "c4 e4 g4 c5",
+          "docStart": 72,
+          "docEnd": 83
+        },
+        "arrangement": null,
+        "inlineAttrs": [
+          {
+            "name": "wave",
+            "values": [
+              "pulse"
+            ]
+          }
+        ],
+        "transforms": []
+      }
+    ]
+  }
+}

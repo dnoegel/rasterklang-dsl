@@ -44,6 +44,17 @@ function normalizeVibTri(v) {
   return { cmp, speed: Math.round(v.speed), delay };
 }
 
+// normalizeHardRestart({ ad, sr, test }) -> { ad, sr, test } with ad/sr as
+// packed register bytes (null to leave the instrument's own), or null when
+// no clause was given. ADR 0005 D4: what compile.js writes during a
+// `hardRestart N` window that leads into another note.
+function normalizeHardRestart(h) {
+  if (!h || typeof h !== 'object') return null;
+  const pack = (pair) => (Array.isArray(pair) && pair.length === 2 ? ((pair[0] & 0x0f) << 4) | (pair[1] & 0x0f) : null);
+  const out = { ad: pack(h.ad), sr: pack(h.sr), test: h.test === true, beforeNotes: h.beforeNotes === true };
+  return out.ad === null && out.sr === null && !out.test && !out.beforeNotes ? null : out;
+}
+
 export function instrument({
   wave = null,
   adsr = null,
@@ -59,6 +70,7 @@ export function instrument({
   gateTable = null,
   speed = null,
   gateMode = null,
+  hardRestart = null,
 } = {}) {
   // normalizeTable: an empty array is treated the same as "field never set"
   // (null) - so every call site downstream (compile.js's `inst.wave` etc.)
@@ -160,5 +172,6 @@ export function instrument({
     // default) is a forced same-frame edge with no real low-to-high
     // guarantee.
     gateMode: gateMode === 'legato' || gateMode === 'retrigger' ? gateMode : null,
+    hardRestart: normalizeHardRestart(hardRestart),
   };
 }

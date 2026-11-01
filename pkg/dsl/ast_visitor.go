@@ -277,6 +277,11 @@ func (v *visitor) buildTempoStmt(ctx gen.ITempoStmtContext) *TempoStmt {
 	var beats *int
 	var offset *float64
 	var meter *Meter
+	var groove *int
+	unit := "bpm"
+	if tc.SPEED() != nil {
+		unit = "framesPerBeat"
+	}
 	for _, sc := range tc.AllTempoSetting() {
 		stc := sc.(*gen.TempoSettingContext)
 		name := identText(stc.AnyIdent())
@@ -307,22 +312,34 @@ func (v *visitor) buildTempoStmt(ctx gen.ITempoStmtContext) *TempoStmt {
 				fail(line, "meter's numerator and denominator must be integers, got %v/%v", n, d)
 			}
 			meter = &Meter{Numerator: int(n), Denominator: int(d)}
+		case "groove":
+			// ADR 0005 D5: funktempo, every other beat lasts this many frames.
+			if len(numbers) > 1 {
+				fail(line, "'groove' takes a single number of frames, not a fraction")
+			}
+			if n != math.Trunc(n) || n <= 0 {
+				fail(line, "'groove' must be a positive integer number of frames, got %v", n)
+			}
+			if unit != "framesPerBeat" {
+				fail(line, "'groove' counts frames, so it needs 'speed N' (frames per beat), not 'tempo' (BPM)")
+			}
+			gv := int(n)
+			groove = &gv
 		default:
-			fail(line, "expected 'meter', 'beats' or 'offset', found '%s'", name)
+			fail(line, "expected 'meter', 'beats', 'offset' or 'groove', found '%s'", name)
 		}
+	}
+	if groove != nil && value.Kind == "pattern" {
+		fail(line, "'groove' needs a constant 'speed N'; a speed pattern and a groove have no defined combination")
 	}
 	if beats != nil && meter != nil {
 		fail(line, "a tempo statement cannot combine 'meter' and 'beats' - 'beats' is deprecated in favor of 'meter N/4', use one or the other")
 	}
-	// Which of the two clock spellings was written (ADR 0001's D4):
+	// unit is which of the two clock spellings was written (ADR 0001's D4):
 	// "bpm" for `tempo N`, "framesPerBeat" for `speed N`. Same node type
 	// either way; the unit conversion and the "exactly one clock
 	// statement" rule are both semantic, not grammatical (decision 11).
-	unit := "bpm"
-	if tc.SPEED() != nil {
-		unit = "framesPerBeat"
-	}
-	return &TempoStmt{Line: line, Unit: unit, Value: value, Beats: beats, Offset: offset, Meter: meter}
+	return &TempoStmt{Line: line, Unit: unit, Value: value, Beats: beats, Offset: offset, Meter: meter, Groove: groove}
 }
 
 // buildTargetStmt is ADR 0002's `target { ... }` block. Mirrors
@@ -380,8 +397,33 @@ func (v *visitor) buildTargetStmt(ctx gen.ITargetStmtContext) *TargetStmt {
 			}
 			mv := int(n)
 			out.Multispeed = &mv
+		case "pitch":
+			// ADR 0006 D4: which machine's clock the note table is computed at.
+			if word == "" {
+				fail(line, "'pitch' takes a video standard (%s), not a number", strings.Join(VideoStandards, " or "))
+			}
+			if !contains(VideoStandards, word) {
+				fail(line, "unknown video standard '%s' (expected %s)", word, strings.Join(VideoStandards, " or "))
+			}
+			if out.Pitch != "" {
+				fail(line, "'pitch' given twice in one target block")
+			}
+			out.Pitch = word
+		case "tuning":
+			// ADR 0006 D4: shift every note by this many cents.
+			if num == nil {
+				fail(line, "'tuning' takes a number of cents, e.g. 'tuning 40' or 'tuning -12.5'")
+			}
+			n := v.numOf(num)
+			if !(math.Abs(n) <= 1200) {
+				fail(line, "tuning must be within -1200..1200 cents, got %v", n)
+			}
+			if out.Tuning != nil {
+				fail(line, "'tuning' given twice in one target block")
+			}
+			out.Tuning = &n
 		default:
-			fail(line, "expected 'video', 'driveCycles' or 'multispeed' in a target block, found '%s'", name)
+			fail(line, "expected 'video', 'driveCycles', 'multispeed', 'pitch' or 'tuning' in a target block, found '%s'", name)
 		}
 	}
 	if out.DriveCycles != nil && out.Multispeed != nil {
@@ -517,6 +559,63 @@ func (v *visitor) buildInstrumentBlock(ctx gen.IInstrumentBlockContext) *Instrum
 		fields = append(fields, v.buildInstrumentField(f))
 	}
 	return &InstrumentBlock{Line: line, Name: name, Fields: fields}
+}
+
+// parseHardRestartClauses reads the clauses after `hardRestart N` (ADR 0005
+// D4, ADR 0006 D5): `ad A D` and `sr S R` (nibbles) and the bare flags `test`
+// and `beforeNotes`, in any order, each at most once. Mirrors astVisitor.js's
+// parseHardRestartClauses.
+func parseHardRestartClauses(tokens []TableValue, line int) *HardRestartSpec {
+	out := &HardRestartSpec{}
+	seen := map[string]bool{}
+	for i := 0; i < len(tokens); {
+		word, ok := tableValueAsWord(tokens[i])
+		if !ok || (word != "ad" && word != "sr" && word != "test" && word != "beforeNotes") {
+			fail(line, "'hardRestart' clauses are 'ad A D', 'sr S R', 'test' and 'beforeNotes', found %v", tableValueText(tokens[i]))
+		}
+		if seen[word] {
+			fail(line, "'hardRestart' has '%s' twice", word)
+		}
+		seen[word] = true
+		if word == "test" || word == "beforeNotes" {
+			if word == "test" {
+				out.Test = true
+			} else {
+				out.BeforeNotes = true
+			}
+			i++
+			continue
+		}
+		var pair [2]int
+		for j := 0; j < 2; j++ {
+			if i+1+j >= len(tokens) {
+				fail(line, "'hardRestart %s' expects two nibbles 0-15, e.g. '%s 0 0'", word, word)
+			}
+			n, ok := tableValueAsNumber(tokens[i+1+j])
+			if !ok || n != math.Trunc(n) || n < 0 || n > 15 {
+				fail(line, "'hardRestart %s' expects two nibbles 0-15, e.g. '%s 0 0'", word, word)
+			}
+			pair[j] = int(n)
+		}
+		if word == "ad" {
+			out.AD = &pair
+		} else {
+			out.SR = &pair
+		}
+		i += 3
+	}
+	return out
+}
+
+// tableValueText is a table token as an error message shows it.
+func tableValueText(t TableValue) string {
+	if w, ok := tableValueAsWord(t); ok {
+		return fmt.Sprintf("%q", w)
+	}
+	if n, ok := tableValueAsNumber(t); ok {
+		return fmt.Sprintf("%v", n)
+	}
+	return fmt.Sprintf("%v", t)
 }
 
 func tableValueAsNumber(t TableValue) (float64, bool) {
@@ -763,14 +862,22 @@ func (v *visitor) buildInstrumentField(ctx gen.IInstrumentFieldContext) Instrume
 	case "hardRestart": {
 		// ADR 0003 D11: the readable spelling of 'gate -N' - compiles to
 		// exactly the same AST shape a numeric 'gate -N' field would.
-		if len(tokens) != 1 {
+		if len(tokens) < 1 {
 			fail(line, "'hardRestart' expects 1 number of frames")
 		}
 		n, ok := tableValueAsNumber(tokens[0])
-		if !ok || n != math.Trunc(n) || n <= 0 {
-			fail(line, "'hardRestart' must be a positive integer number of frames, got %v", tokens[0])
+		if !ok {
+			fail(line, "'hardRestart' expects 1 number of frames")
 		}
-		return &InstGateField{Line: line, Value: TableNumber{Value: -n}}
+		if n != math.Trunc(n) || n <= 0 {
+			fail(line, "'hardRestart' must be a positive integer number of frames, got %v", n)
+		}
+		field := &InstGateField{Line: line, Value: TableNumber{Value: -n}}
+		if len(tokens) > 1 {
+			// ADR 0005 D4: optional ad/sr/test clauses for the restart frames.
+			field.HardRestart = parseHardRestartClauses(tokens[1:], line)
+		}
+		return field
 	}
 	default:
 		fail(line, "unknown instrument field '%s' (expected %v)", name, instrumentFieldsList)

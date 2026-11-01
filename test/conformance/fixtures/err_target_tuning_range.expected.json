@@ -1,0 +1,5 @@
+{
+  "ok": false,
+  "line": 1,
+  "message": "line 1: tuning must be within -1200..1200 cents, got 2400"
+}

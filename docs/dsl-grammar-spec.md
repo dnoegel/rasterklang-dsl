@@ -137,9 +137,11 @@ tempo_stmt      := ('tempo' | 'speed') tempo_value (tempo_setting)*
                                             ; Exactly one clock statement per song; having
                                             ; neither or both is a semantic error, not a
                                             ; grammar one, so the message can say which.
-tempo_setting   := 'beats' INT | 'offset' NUMBER
-                                            ; 'beats' is the TIME SIGNATURE (how long a bar
+tempo_setting   := 'beats' INT | 'offset' NUMBER | 'meter' INT '/' INT
+                  | 'groove' INT            ; 'beats' is the TIME SIGNATURE (how long a bar
                                             ; is). It does not set any pattern's length.
+                                            ; 'groove' (4.3.0, ADR 0005 D5) needs a constant
+                                            ; 'speed': beats alternate speed/groove frames.
 tempo_value     := NUMBER | STRING          ; STRING form allows "<120 96>" etc.
 
 target_stmt     := 'target' '{' target_setting* '}'
@@ -151,6 +153,8 @@ target_setting  := 'video' ('PAL' | 'NTSC')
                   | 'multispeed' INT        ; play calls per video frame
                                             ; 'driveCycles' and 'multispeed' together is a
                                             ; semantic error (two spellings of one number).
+                  | 'pitch' ('PAL' | 'NTSC') ; 4.4.0: the clock the NOTE TABLE is computed at
+                  | 'tuning' NUMBER         ; 4.4.0: every note shifted by this many cents
 
 pattern_decl    := 'pattern' IDENT NUMBER? '=' STRING
                                             ; the optional NUMBER is the pattern's declared
@@ -178,6 +182,11 @@ instrument_field:= 'wave' table_row
                   | 'gate' (NUMBER | table_row) ; NUMBER >= 0 = static fraction of the slot; NUMBER < 0 = gate-off
                                                 ;   frames at the note's END (GoatTracker's gatetimer/hard restart);
                                                 ;   table_row = per-frame gate-bit program
+                  | 'hardRestart' INT hr_clause* ; = gate -INT, plus (4.3.0, ADR 0005 D4) what the
+                                                ;   restart frames write before a following note
+
+hr_clause       := 'ad' INT INT | 'sr' INT INT | 'test' | 'beforeNotes'
+                                                ; any order, each at most once
 
 loop_pair       := ('wave'|'pw'|'arp'|'filterTable'|'test'|'gate') INT
 
@@ -492,10 +501,26 @@ notes "c4 _ ~ ~"             ; ring for two beats, then release
 ```
 
 Each `_` extends the step before it by one step's worth of time; `_@2` and `_!2` add two at
-once. A hold with nothing before it is an error. Holds work after a rest too (`"~ _"` is a
-two-beat rest), and a **weighted rest closes the gate for its whole span** exactly like the
-equivalent run of plain rests - `"c4@4 ~@4"` releases at the halfway point, it does not ring
-through.
+once. Holds work after a rest too (`"~ _"` is a two-beat rest), and a **weighted rest closes the
+gate for its whole span** exactly like the equivalent run of plain rests - `"c4@4 ~@4"` releases
+at the halfway point, it does not ring through.
+
+**A hold with nothing before it is a tie** (since `4.4.0`, ADR 0006 D1; an error before). It
+continues whatever note sounds at that point in time: the last note of the previous bar, of the
+previous `<...>` entry, or of the step before an enclosing group. That is what a tracker does when
+a pattern opens with empty rows while the previous pattern's note rings on, and it is what makes
+per-bar patterns able to hold a note across the bar line:
+
+```
+pattern a 4 = "c4 _ _ e4"
+pattern b 4 = "_ _ g4 _"      ; e4 rings on for two more beats
+voice 0 lead "<$a $b>"
+```
+
+The continuation is legato: no retrigger, the instrument's tables keep running, and a `gate -N`
+or `hardRestart N` releases at the end of the tied part rather than at the bar line. With nothing
+sounding before it, a leading hold is silence. It continues notes only: an `fx` or `insts`
+pattern that starts a sequence with `_` is an error.
 
 Being able to write a held note is what makes it practical to split a long melody into
 per-bar patterns: a note tied across a bar line has a spelling now.
@@ -564,6 +589,13 @@ by these:
   Maps to GoatTracker's `EXY`/`FXY` funktempo - a real, precedented technique, not a novelty.
 - With a constant tempo the compiler derives frames per bar once. With a tempo pattern it
   re-derives frames per bar at each bar boundary, sampling the pattern once per bar.
+- `speed 6 groove 5 beats 8` (since `4.3.0`, ADR 0005 D5) - GoatTracker's funktempo within a
+  bar: beats alternate between 6 and 5 frames, counted from the song's first beat (beat 0 is 6,
+  beat 1 is 5, ...), so a bar of an odd number of beats alternates between two lengths, as the
+  original does. Notes keep their bar position; only the frame mapping inside the bar becomes
+  piecewise linear. Needs a constant `speed` (an error with `tempo` or a `speed "<...>"`
+  pattern). Tempo changes on arbitrary rows inside a bar stay out of scope: the clock is derived
+  from bar position, and so is every pattern that could carry such a command.
 
 ### Target: the drive rate (`target_stmt`)
 
@@ -577,6 +609,12 @@ with no video relationship at all (`Welle_Erdball_Alles_Luege.sid`: 12,801 cycle
 - `target { video NTSC }` - 1022727/17045 = 60.00158 Hz.
 - `target { video PAL multispeed 3 }` - 3 play calls per video frame, 19705/3 = 6568 cycles.
 - `target { driveCycles 12801 }` - the general form: this many CPU cycles per play call, exact.
+- `target { video NTSC pitch NTSC }` (since `4.4.0`, ADR 0006 D4) - also compute the NOTE TABLE at
+  the NTSC clock. `video` alone sets only the drive rate; the note table stays the PAL one every
+  song has always used, so an NTSC tune's notes sound about 0.65 semitone flat unless the source
+  compensates. `pitch` makes notes and frequency words agree with the real machine.
+- `target { tuning 40 }` (since `4.4.0`) - every note shifted by this many cents (-1200..1200),
+  for player note tables that sit off A=440, e.g. DMC's around +40 cents.
 
 `driveCycles` is the primitive; `video` and `multispeed` are macros over it, so `multispeed`
 without `video` means "multispeed against PAL". Giving both `driveCycles` and `multispeed` is an
@@ -813,6 +851,15 @@ appear to phase-drift against the song instead of restarting fresh on every note
   genuinely two different clocks/mechanisms sharing one field name depending on where they're
   written, the same split `wave` already has between an instrument's bare table and a voice's
   quoted pattern.
+- `hardRestart N` - the readable spelling of `gate -N`. Since `4.3.0` (ADR 0005 D4) it takes
+  optional clauses for what those N frames write when another note follows directly: `ad A D`
+  and `sr S R` replace the instrument's envelope (the classic AD/SR reset that lets the next
+  attack start from silence), `test` sets the test bit. `hardRestart 2 ad 0 0 sr 0 0 test`. Before
+  a rest the note releases normally, as GoatTracker only hard-restarts into a new note. The
+  restart envelope outranks an `fx ad`/`sr` override. The `beforeNotes` clause (since `4.4.0`,
+  ADR 0006 D5) keeps the early release for notes only: before a rest (a key-off) the gate stays
+  open until the rest begins, as DMC's "release one tick before the next note" flag does.
+  `hardRestart` never releases early into a legato transition (a tie, `fx tp`, `slideTo`).
 
 **Articulation defaults (why a `gate` is needed at all).** With no `gate` field, a note holds the
 gate high for its whole slot, so a run of consecutive notes is one continuous gate-high run: the
@@ -874,6 +921,23 @@ GoatTracker's own note-relative speed form, which cannot be resolved to a consta
 | `pw.N` | Overwrite the pulse width, `0-4095` (the same 12-bit domain as an instrument's own `pw` table column; a value outside it is an error, not a clamp). Ignored when the instrument has a `pw` table, for the same reason `wave.N` yields to a `wave` table. |
 | `fcut.N` | Set the shared filter's cutoff (GoatTracker's 8-bit value, scaled to the SID's 11-bit register). |
 | `vol.N` | Set the master volume nibble. |
+| `wtab.NAME` / `atab.NAME` / `ptab.NAME` / `ftab.NAME` | Start the named `table` in place of this voice's `wave` / `arp` / `pw` / `filterTable` table, from index 0 on its own clock (frames since this fx fired), until the next note onset. Optional loop index: `ptab.sweep.4`. |
+| `res.N` / `route.M` | Set the shared filter's resonance (0-15) / routing mask (0-15, bit 0 = voice 0, bit 3 = external input). |
+| `fmode.N` | Set the filter mode nibble of `$D418` (0-15: 1 lowpass, 2 bandpass, 4 highpass, 8 voice 3 off). |
+| `fctl.R.M` | Resonance and routing in one row (GoatTracker `Bxx`). |
+| `pws.D` | Pulse sweep: add D (signed) to the pulse width every frame of the step, wrapping at 12 bits. |
+| `pwm.LO.HI.S` | Pulse ping-pong: move the pulse width by S per frame, bouncing between LO and HI. |
+| `fsw.D` | Cutoff sweep: add D (signed, GoatTracker 8-bit units) to the cutoff every frame of the step, wrapping at 8 bits like `gplay.c`'s accumulator (see ADR 0004). |
+
+**The `4.3.0` tokens (ADR 0005)** follow the existing ones. The filter tokens are song-global and
+sticky like `fcut.N`/`vol.N`, overriding the `filter` block's field from their frame on; an
+out-of-range value is an error, not a clamp. A table op's override is dropped at the next note
+onset (a legato `tp`/`gate legato`/`slideTo` transition is not one); `NAME` must be a `table`
+declaration, and a `ptab`/`ftab` table must hold numbers. A sweep starts from the value the register
+holds and leaves its result in place like the matching one-shot token; a running `pw` table
+outranks `pws`/`pwm` and a running filter table outranks `fsw`, the same rule as `pw.N`/`fcut.N`. A
+`pws`/`pwm` step that began before a note onset keeps sweeping through it, so `fx "pws.8@4"` over
+several notes is one ramp.
 
 **`pw.N` is the one token here with no GoatTracker command behind it** (since `4.2.0`). GoatTracker
 reaches pulse width only indirectly, through `CMD_SETPULSEPTR` (`0x09`), which repoints the running
@@ -897,13 +961,13 @@ per-tick `TICKNEFFECTS` block), not from reverse-engineering byte patterns.
 | `0x05` | set AD | new syntax: `ad.A.D`. Overlaps `insts` in principle (switching to an instrument with a different `adsr`), but only in principle: the command changes AD *without* touching the wave/pulse/filter tables or restarting anything, which an instrument switch cannot express. |
 | `0x06` | set SR | new syntax: `sr.S.R`, same reasoning. |
 | `0x07` | set waveform | new syntax: `wave.N`. Overlaps an instrument `wave` table, and where a table exists the table genuinely wins (gplay.c runs `WAVEEXEC` after the command switch) - so this only matters for table-less instruments, and is implemented that way. |
-| `0x08` | set wavetable pointer | **deliberately unsupported.** Repoints the running table to an absolute index in GoatTracker's single GLOBAL wave table. DSL v2 instruments own private, already-sliced copies of their tables; there is no global index space to jump within, and synthesizing one instrument per reachable jump target would change instrument identity (and therefore envelope/onset behavior) rather than just the table position. |
-| `0x09` | set pulse pointer | **deliberately unsupported**, same reason. Note that the `pw.N` token is NOT this command: it writes the pulse-width register directly and does not touch any table pointer. |
-| `0x0a` | set filter pointer | **deliberately unsupported**, same reason. |
-| `0x0b` | set filter control | **deliberately unsupported.** Packs filter resonance and per-voice routing into one byte; DSL v2's `filter` block owns both as song-level fields with no per-row lane to write them from. |
+| `0x08` | set wavetable pointer | since `4.3.0`: `wtab.NAME` and `atab.NAME` (ADR 0005 D1). GoatTracker repoints into one GLOBAL table, while DSL instruments own private copies, so there is no index to jump to; instead the importer names each reachable jump target as a `table` and the token starts it, leaving instrument identity alone. GoatTracker's wave table carries the waveform and the note column, hence two tokens. |
+| `0x09` | set pulse pointer | since `4.3.0`: `ptab.NAME`, same approach. The `pw.N` token is NOT this command: it writes the pulse-width register directly. |
+| `0x0a` | set filter pointer | since `4.3.0`: `ftab.NAME`, same approach. |
+| `0x0b` | set filter control | since `4.3.0`: `fctl.R.M` (resonance and routing nibbles; ADR 0005 D2). |
 | `0x0c` | set filter cutoff | new syntax: `fcut.N` |
 | `0x0d` | set master volume | new syntax: `vol.N` |
-| `0x0e` | funktempo | **deliberately unsupported.** Alternates between two tempos row by row; DSL v2's tempo varies per BAR at finest, and one bar is a whole pattern play. |
+| `0x0e` | funktempo | since `4.3.0`: `speed N groove M` on the tempo statement (ADR 0005 D5) when one row is one beat. A funktempo switched on or off mid-song still has no spelling, since the groove is song-wide. |
 | `0x0f` | set tempo | **maps onto the existing `tempo` feature**, not onto `fx`. The GoatTracker importer folds the song's commanded tempo into the `tempo`/`beats` it emits (previously it hardcoded GoatTracker's power-on default of 6 frames per row, which ran every self-tempo-setting song at the wrong speed). A song that changes tempo mid-tune still cannot be represented exactly; the most-commanded value wins and the importer warns. |
 
 ### Per-note instrument switching (`insts`)

@@ -62,11 +62,17 @@ export function resolveTarget(target) {
   let driveCycles = target && target.driveCycles != null ? target.driveCycles : base.driveCycles;
   const multispeed = target && target.multispeed != null ? target.multispeed : 1;
   if (multispeed > 1) driveCycles = Math.max(1, Math.round(driveCycles / multispeed));
+  // ADR 0006 D4: `pitch PAL|NTSC` computes the note table at that machine's
+  // clock (null = the PAL table every song had before), `tuning CENTS`
+  // shifts it.
+  const pitch = target && target.pitch ? videoDefaults(target.pitch) : null;
   return {
     video,
     cpuClockHz: base.cpuClockHz,
     driveCycles,
     driveHz: base.cpuClockHz / driveCycles,
     multispeed,
+    noteClockHz: pitch ? pitch.cpuClockHz : null,
+    tuningCents: target && target.tuning != null ? target.tuning : 0,
   };
 }

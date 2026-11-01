@@ -42,7 +42,11 @@ func canonStatement(s dsl.Statement) any {
 		if n.Meter != nil {
 			meter = map[string]any{"numerator": f(float64(n.Meter.Numerator)), "denominator": f(float64(n.Meter.Denominator))}
 		}
-		return map[string]any{"type": "TempoStmt", "line": f(float64(n.Line)), "unit": n.Unit, "value": canonTempoValue(n.Value), "beats": beats, "offset": offset, "meter": meter}
+		m := map[string]any{"type": "TempoStmt", "line": f(float64(n.Line)), "unit": n.Unit, "value": canonTempoValue(n.Value), "beats": beats, "offset": offset, "meter": meter}
+		if n.Groove != nil {
+			m["groove"] = f(float64(*n.Groove))
+		}
+		return m
 	case *dsl.TargetStmt:
 		var driveCycles any
 		if n.DriveCycles != nil {
@@ -56,7 +60,14 @@ func canonStatement(s dsl.Statement) any {
 		if n.Video != "" {
 			video = n.Video
 		}
-		return map[string]any{"type": "TargetStmt", "line": f(float64(n.Line)), "video": video, "driveCycles": driveCycles, "multispeed": multispeed}
+		m := map[string]any{"type": "TargetStmt", "line": f(float64(n.Line)), "video": video, "driveCycles": driveCycles, "multispeed": multispeed}
+		if n.Pitch != "" {
+			m["pitch"] = n.Pitch
+		}
+		if n.Tuning != nil {
+			m["tuning"] = *n.Tuning
+		}
+		return m
 	case *dsl.ChipStmt:
 		return map[string]any{"type": "ChipStmt", "line": f(float64(n.Line)), "model": f(float64(n.Model))}
 	case *dsl.PatternDecl:
@@ -248,6 +259,9 @@ func canonInstrumentField(fl dsl.InstrumentField) map[string]any {
 			m["mode"] = n.Mode
 		} else if n.Value != nil {
 			m["value"] = canonTableValue(n.Value)
+			if n.HardRestart != nil {
+				m["hardRestart"] = canonHardRestart(n.HardRestart)
+			}
 		} else {
 			m["tokens"] = canonTableValues(n.Tokens)
 			m["speed"], m["delay"] = canonSpeedDelay(n.Speed, n.Delay)
@@ -503,4 +517,14 @@ func canonSignalExpr(n *dsl.SignalExpr) map[string]any {
 		speeds[i] = map[string]any{"op": s.Op, "value": f(s.Value)}
 	}
 	return map[string]any{"type": "SignalExpr", "line": f(float64(n.Line)), "signal": n.Signal, "range": rng, "speeds": speeds}
+}
+
+func canonHardRestart(h *dsl.HardRestartSpec) map[string]any {
+	pair := func(p *[2]int) any {
+		if p == nil {
+			return nil
+		}
+		return []any{float64(p[0]), float64(p[1])}
+	}
+	return map[string]any{"ad": pair(h.AD), "sr": pair(h.SR), "test": h.Test, "beforeNotes": h.BeforeNotes}
 }

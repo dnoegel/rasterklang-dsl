@@ -1,0 +1,5 @@
+{
+  "ok": false,
+  "line": 1,
+  "message": "line 1: 'groove' needs a constant 'speed N'; a speed pattern and a groove have no defined combination"
+}

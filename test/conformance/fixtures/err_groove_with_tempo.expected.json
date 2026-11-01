@@ -1,0 +1,5 @@
+{
+  "ok": false,
+  "line": 1,
+  "message": "line 1: 'groove' counts frames, so it needs 'speed N' (frames per beat), not 'tempo' (BPM)"
+}

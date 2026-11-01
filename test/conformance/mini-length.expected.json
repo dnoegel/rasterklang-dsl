@@ -229,11 +229,27 @@
   },
   {
     "source": "_ c4",
-    "ok": false
+    "ok": true,
+    "contentBeats": 2,
+    "candidates": [
+      {
+        "beats": 2,
+        "what": "contents"
+      }
+    ],
+    "expanded": "_ c4"
   },
   {
     "source": "c4 [_ e4]",
-    "ok": false
+    "ok": true,
+    "contentBeats": 2,
+    "candidates": [
+      {
+        "beats": 2,
+        "what": "contents"
+      }
+    ],
+    "expanded": "c4 [_ e4]"
   },
   {
     "source": "c4/4 d4/8 e4/8 f4/2",
