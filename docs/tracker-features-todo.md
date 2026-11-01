@@ -22,6 +22,25 @@ Format of an entry:
   notes spells many `_` holds. *Seen in:* every DMC and Music Assembler
   tune.
 
+- **Notes that sound across a pattern boundary** (every tracker: a note
+  rings on while the next pattern starts with empty rows): a DSL pattern
+  cannot open with `_` ("a hold with nothing before it is an error"), so
+  sngcodegen writes `~` there and the note is cut at the cycle boundary; an
+  instrument with `gate -N` then releases a note that starts in a cycle's
+  last row almost at once. This hits GoatTracker conversions as much as
+  lifted ones. *Today:* `lift -from-notes` cuts its entries where no note
+  sounds on and uses 64-row entries; decoded patterns are kept as they are.
+  A hold that may continue the previous cycle's note (or a note weight that
+  reaches past the cycle) would fix it. *Seen in:* DEMOS/G-L/Hey_Jude.sid
+  (from notes: gate match 0.82 with 16-row cycles, 0.93 with 64).
+- **Tie: a new pitch without a new gate** (DMC slide and glide, v1d legato,
+  Music Assembler tied notes, Future Composer row commands, Soundmonitor
+  notes without bit 7, JCH duration bit $10): the converters write a
+  GoatTracker tone portamento with speed 0, which becomes `fx tp.0`, and
+  the engine starts a new note (new gate) there. *Today:* ties retrigger.
+  A note modifier that changes pitch without an onset (`gate legato`
+  per note) would say it.
+
 ## Instruments
 
 - **Instrument tables run through the release** (DMC, Music Assembler,
