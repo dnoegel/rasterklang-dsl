@@ -77,6 +77,15 @@ Format of an entry:
   is. *Today:* the converter measures the first frames of the note's pulse
   width and holds the last value after them. A ramp-with-limits (start,
   speed, low, high, reverse or wrap) would say DMC's sweep exactly.
+- **NTSC SID clock** (every NTSC tune): `target { video NTSC }` sets the
+  60 Hz drive rate, but notes still play from DSL's PAL note table, so the
+  same note sounds about 0.65 semitone lower than on the NTSC machine.
+  *Today:* converters emit the note whose PAL frequency word matches the
+  registers (lift's per-tune register shift, typically -1), so the render
+  matches the original's register values but not its musical pitch; the
+  musical pitch is kept in the notes corpus. A chip clock that also sets
+  the note table would make the two agree. *Seen in:*
+  MUSICIANS/A/Abaddon/WIP_Q.sid (JCH, NTSC).
 - **Player note tables that are not equal-tempered A=440**: DMC's and
   others' frequency tables sit tens of cents off (DMC around +40 cents in
   Utopia.sid), and some are not even equal-tempered. DSL plays its own
