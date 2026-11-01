@@ -1,0 +1,75 @@
+# Additional features from other trackers
+
+A running list of player mechanisms met while converting tunes from other
+C64 trackers into DSL v2 (rasterklang-conv `lift`: DMC, Music Assembler, and
+next Future Composer, JCH NewPlayer, Soundmonitor, defMON) that DSL v2 or its
+engine (rasterklang-score) cannot say yet, or says differently. It is a
+backlog of candidates, not a decision to add them. Converters work around
+each entry as noted; the workaround is what a feature here would replace.
+
+Format of an entry:
+
+- **Feature** (trackers): what the player does. *Today:* the converter's
+  approximation. *Seen in:* example tunes, and reach when measured.
+
+## Timing and structure
+
+- **Per-note row length** (DMC, Music Assembler, Future Composer,
+  Soundmonitor): a duration byte sets how many ticks each following row
+  lasts, so rows in one pattern have different lengths. *Today:* a row of
+  d ticks becomes d GoatTracker rows (note, then holds), compacted by the
+  greatest common divisor of all row lengths. Works, but a pattern of long
+  notes spells many `_` holds. *Seen in:* every DMC and Music Assembler
+  tune.
+
+## Instruments
+
+- **Instrument tables run through the release** (DMC, Music Assembler,
+  GoatTracker itself): after a key-off the tracker keeps executing the wave
+  table, so an arpeggio or wave sequence goes on sounding while the envelope
+  releases. rasterklang-score samples an instrument's `arp` only while a
+  note is active (`tone !== undefined` in compile.js), so during a `~` rest
+  the frequency freezes; `pw` and `wave` keep running. *Today:* when an
+  instrument's key-off always comes the same number of frames before the
+  next note, the note is held and released with `gate -N` instead; other
+  key-offs stay rests and lose the running arpeggio. *Seen in:*
+  DEMOS/S-Z/Utopia.sid (DMC, octave arpeggio over the release).
+- **Per-note instrument switching does not switch AD/SR**: `insts` changes
+  an instrument's tables at the onset, but rasterklang-score reads AD/SR
+  from the voice chain's own patterns, never from the per-note instrument
+  (see the comment in engine/liveAudition.js). A voice that alternates
+  instruments keeps the voice instrument's envelope for every note. This hits
+  GoatTracker conversions too. *Today:* nothing; the ADSR lane is wrong
+  wherever a voice switches instruments. *Seen in:* every multi-instrument
+  voice; Utopia.sid voice 1 plays SR $99 notes with the header
+  instrument's $C8.
+- **Pulse sweeps that run on, bounce or wrap** (DMC: sweeps between two
+  nibble limits and reverses; GoatTracker: a modulation step adds to the
+  current width every frame): a `pw` table is a list of absolute values, so
+  `loop pw N` replays values instead of continuing the sweep from where it
+  is. *Today:* the converter measures the first frames of the note's pulse
+  width and holds the last value after them. A ramp-with-limits (start,
+  speed, low, high, reverse or wrap) would say DMC's sweep exactly.
+- **Player note tables that are not equal-tempered A=440**: DMC's and
+  others' frequency tables sit tens of cents off (DMC around +40 cents in
+  Utopia.sid), and some are not even equal-tempered. DSL plays its own
+  table. *Today:* notes map to the nearest MIDI note, the detuning is lost.
+  A song-level `tuning CENTS` (or a custom 96-entry table) would keep it.
+
+## Effects
+
+- **Slides with a target and a speed** (DMC slide-note `$C0-$CF`/`$E0-$EF`
+  with start and target note, glide `$D0-$DF`; Future Composer `$E0-$EF`):
+  *Today:* the converter starts the note and ties to the target at the next
+  row (`fx` tone portamento with speed 0), so the glide itself is lost.
+
+## Notes for converters (not DSL gaps)
+
+These are limits of the GoatTracker song model the converters route
+through, not of DSL v2; listed so they are not mistaken for DSL work.
+
+- GoatTracker's relative note column only goes up ($00-$5F); steps down are
+  written as absolute notes when the played note is known.
+- Wave-table left values $E0 and up are commands, so control bytes with
+  noise plus other waveforms are written without their pulse bit.
+- Filter programs are not lifted yet.
