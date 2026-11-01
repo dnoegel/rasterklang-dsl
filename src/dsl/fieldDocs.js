@@ -143,7 +143,7 @@ export const FIELD_DOCS = {
   insts: {
     signature: 'insts STRING',
     description:
-      "Switches instruments PER NOTE on this one voice - a quoted mini-notation pattern of already-declared `instrument` NAMEs, sampled at each note's own onset and held for that note's whole duration. This is the DSL's answer to GoatTracker's per-row instrument column (e.g. alternating bass/drum/snare on one channel), something a single `voice`/`instrument N ...` binding can't express on its own. A note whose onset has no active `insts` value falls back to the voice's own static instrument (a named instrument or inline attrs), so not every note needs its own entry.",
+      "Switches instruments PER NOTE on this one voice - a quoted mini-notation pattern of already-declared `instrument` NAMEs, sampled at each note's own onset and held for that note's whole duration. This is the DSL's answer to GoatTracker's per-row instrument column (e.g. alternating bass/drum/snare on one channel), something a single `voice`/`instrument N ...` binding can't express on its own. A note whose onset has no active `insts` value falls back to the voice's own static instrument (a named instrument or inline attrs), so not every note needs its own entry. Always quoted, in short mode too (`insts:\"$kit\"`); an unquoted `insts:$kit` is an error.",
     example: 'insts "bass bass drum bass"',
   },
   fx: {

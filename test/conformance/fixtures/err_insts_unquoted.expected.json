@@ -1,0 +1,5 @@
+{
+  "ok": false,
+  "line": 6,
+  "message": "line 6: 'insts:' expects a quoted mini-notation pattern, e.g. insts:\"$kit\" or insts:\"bd5 hh5\""
+}

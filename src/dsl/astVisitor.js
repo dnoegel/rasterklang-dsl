@@ -691,6 +691,12 @@ function buildInlineAttr(ctx) {
     const s = strInfo(ctx.str());
     return { name, isPattern: true, source: s.value, docStart: s.docStart, docEnd: s.docEnd };
   }
+  // `insts:` and `fx:` are always mini-notation patterns, like their
+  // extended-mode fields. A bare value (`insts:$kit`, `insts:bd5`) used to
+  // parse as a table row and then be ignored without a word.
+  if (name === 'insts' || name === 'fx') {
+    fail(ctx.start.line, `'${name}:' expects a quoted mini-notation pattern, e.g. ${name}:"$kit" or ${name}:"bd5 hh5"`);
+  }
   const values = ctx.valueList().tableToken().map(buildTableToken);
   return { name, values };
 }

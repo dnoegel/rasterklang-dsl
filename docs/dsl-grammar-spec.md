@@ -81,6 +81,11 @@ API" at the end of this doc.
   alternation, `*n`/`/n` speed, `@n` weight, `!n` replicate, `?p` drop, `a|b` choice, `(p,s,r)`
   euclidean, note names, numbers, bare words), plus `_`, the hold token added in 3.0.0 (see
   "Song time").
+- **Note names** (inside strings): a letter `a`-`g`, at most one accidental (`s` or `#` sharp,
+  `b` or `f` flat), then the octave: `c4`, `cs4`, `c#4`, `eb3`, `ef3`, `bb2`. The letter comes
+  first, so a `b` after it is always the flat sign (`bb2` is B flat 2, `b2` is B 2). Since
+  4.5.0; before, `eb3` stayed a bare word that compiled silently and played no pitch of its own.
+  A note-like word with two accidentals (`cbb4`, `c##4`) is an error.
 - **Named-pattern reference**: `$name` - a sigil-prefixed identifier, resolved at compile time
   (see "Named patterns").
 
@@ -990,7 +995,8 @@ end
 ```
 
 `insts` is a full mini-notation pattern of already-declared `instrument` NAMEs (bare words) -
-always quoted, never a bare per-frame table, since which instrument a note uses is a property of
+always quoted (in short mode too: `insts:"$kit"`, since an unquoted
+`insts:$kit` is an error as of 4.5.0; it used to be ignored), never a bare per-frame table, since which instrument a note uses is a property of
 the note pattern's own timeline (bar-position sampled, the SAME clock as `notes` itself), not
 something that varies mid-note the way a tracker table does. Sampled once at each note's own
 onset and held fixed for that note's whole duration (re-sampling every frame would let the

@@ -14,6 +14,25 @@ bumps the version.
 Several entries mention a GoatTracker-to-DSL converter. The converter is a separate tool; it is
 mentioned here only where its needs motivated a grammar change.
 
+## 4.5.0
+
+**Flats spelled with `b`, and two silent failures made loud.** Found while shortening the Deep Dub
+demo tune in rasterklang-cycles, which played wrong pitches in every bar with a flat.
+
+- **`eb3`, `ab1`, `bb2`, `db5` are notes** (rasterklang-score's `miniNotation.js`), the same as
+  the `f` spelling (`ef3`). They were bare words: no diagnostic, and the engine played no pitch
+  of its own for them (it kept the previous frequency or the instrument's fixed arp note). Songs
+  that used them change sound, to what they meant. Of 4562 `.dsl` files in the workspace, two
+  spell flats with `b` (rasterklang-cycles' `dub` and `nightdrive` demos); none names an
+  instrument, pattern or table like a note, and none writes two accidentals.
+- **A note-like word with two accidentals is an error** (`cbb4`, `c##4`, `ebs3`), naming the
+  token and the allowed spellings.
+- **The note-name typo check knows the `b` flat:** `hb4` is reported like `h4` (invalid letter).
+- **`insts:` and `fx:` in short mode reject an unquoted value.** `insts:$kit` parsed as a table
+  row and was then ignored, so every note fell back to the voice's instrument. Extended mode's
+  `insts`/`fx` fields already required a string; short mode now says the same, with the quoted
+  form (`insts:"$kit"`) in the message.
+
 ## 4.4.0
 
 **Tracker-conversion backlog (ADR 0006).** From the converter backlog in

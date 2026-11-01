@@ -976,6 +976,10 @@ func (v *visitor) buildInlineAttr(ctx gen.IInlineAttrContext) InlineAttr {
 		info := v.strInfo(s)
 		return InlineAttr{Name: name, IsPattern: true, Source: info.Str, DocStart: info.DocStart, DocEnd: info.DocEnd}
 	}
+	// Same rule as astVisitor.js: `insts:`/`fx:` are always quoted patterns.
+	if name == "insts" || name == "fx" {
+		fail(ctx.GetStart().GetLine(), "'%s:' expects a quoted mini-notation pattern, e.g. %s:\"$kit\" or %s:\"bd5 hh5\"", name, name, name)
+	}
 	vl := ac.ValueList().(*gen.ValueListContext)
 	var values []TableValue
 	for _, t := range vl.AllTableToken() {

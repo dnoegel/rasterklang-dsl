@@ -210,7 +210,7 @@ function validateAdsr(values, line) {
 // notes string that splices a reference whose name is a letter followed by
 // digits would otherwise be rejected outright. A note is never legitimately
 // preceded by '$', so excluding it costs no real coverage of the typo case.
-const INVALID_NOTE_RE = /(?<![A-Za-z0-9.#$])([A-Za-z])([sf#]?)(-?\d+)(?![A-Za-z0-9.#])/g;
+const INVALID_NOTE_RE = /(?<![A-Za-z0-9.#$])([A-Za-z])([sfb#]?)(-?\d+)(?![A-Za-z0-9.#])/g;
 function checkNoteNames(text, line) {
   for (const m of text.matchAll(INVALID_NOTE_RE)) {
     const letter = m[1].toLowerCase();
