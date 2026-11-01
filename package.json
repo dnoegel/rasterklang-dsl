@@ -1,6 +1,6 @@
 {
   "name": "rasterklang-dsl",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A text notation for writing C64 SID music: grammar, parser and interpreter (research project)",
   "license": "MIT",
   "author": "Daniel Nögel",
@@ -25,7 +25,7 @@
     "antlr4": "^4.13.2"
   },
   "peerDependencies": {
-    "rasterklang-score": "^0.1.0"
+    "rasterklang-score": "^0.2.0"
   },
   "devDependencies": {
     "rasterklang-score": "file:../rasterklang-score",
