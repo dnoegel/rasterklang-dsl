@@ -43,6 +43,14 @@ Format of an entry:
   wherever a voice switches instruments. *Seen in:* every multi-instrument
   voice; Utopia.sid voice 1 plays SR $99 notes with the header
   instrument's $C8.
+- **Release before the next note, but not before a key-off** (DMC flag
+  $10: the gate drops one tick before the next note starts; a row that keys
+  off releases at the key-off): `gate -N` counts back from the end of the
+  slot, and a `~` ends the slot, so an instrument with both releases early
+  before its key-offs too. *Today:* such an instrument keeps its own
+  release as `gate -N` and its key-offs as rests, and releases N frames too
+  early before each key-off. A gate-off counted from the next ONSET (not the
+  slot end) would say it. *Seen in:* MUSICIANS/M/Marcy/Laughter.sid.
 - **Pulse sweeps that run on, bounce or wrap** (DMC: sweeps between two
   nibble limits and reverses; GoatTracker: a modulation step adds to the
   current width every frame): a `pw` table is a list of absolute values, so
