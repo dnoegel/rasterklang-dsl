@@ -44,7 +44,7 @@ function normalizeVibTri(v) {
   return { cmp, speed: Math.round(v.speed), delay };
 }
 
-// normalizeHardRestart({ ad, sr, test }) -> { ad, sr, test } with ad/sr as
+// normalizeHardRestart({ ad, sr, test, ... }) -> { ad, sr, test, ... } with ad/sr as
 // packed register bytes (null to leave the instrument's own), or null when
 // no clause was given. ADR 0005 D4: what compile.js writes during a
 // `hardRestart N` window that leads into another note.
@@ -52,7 +52,10 @@ function normalizeHardRestart(h) {
   if (!h || typeof h !== 'object') return null;
   const pack = (pair) => (Array.isArray(pair) && pair.length === 2 ? ((pair[0] & 0x0f) << 4) | (pair[1] & 0x0f) : null);
   const out = { ad: pack(h.ad), sr: pack(h.sr), test: h.test === true, beforeNotes: h.beforeNotes === true };
-  return out.ad === null && out.sr === null && !out.test && !out.beforeNotes ? null : out;
+  // DSL 4.7.0, keys only when given (rasterklang-score reads them as flags)
+  if (h.afterRests === true) out.afterRests = true;
+  if (h.presetRelease === true) out.presetRelease = true;
+  return out.ad === null && out.sr === null && !out.test && !out.beforeNotes && !out.afterRests && !out.presetRelease ? null : out;
 }
 
 export function instrument({

@@ -14,6 +14,23 @@ bumps the version.
 Several entries mention a GoatTracker-to-DSL converter. The converter is a separate tool; it is
 mentioned here only where its needs motivated a grammar change.
 
+## 4.7.0
+
+**Two `hardRestart` clauses for the ADSR delay bug.** On a real SID (and an accurate emulator) an
+envelope switched to a faster rate waits until its rate counter wraps around, up to 32768 cycles,
+so attacks after a rest and releases could start up to about 1.7 frames late.
+
+- `afterRests`: the restart window (gate closed, `ad`/`sr`/`test` clauses) also opens in the last
+  N frames of a rest before a note whose instrument has the clause (its N and clauses, up to 8
+  frames).
+- `presetRelease`: in the 2 frames before the gate closes, the decay nibble holds the release
+  rate. The counter wraps while the envelope holds its level, and the release starts on time.
+  Only when the release is faster than the decay (a slower one never meets the bug), the gate is
+  open through both frames, and the note's gate table has not already closed the gate once (a
+  pulsing clap).
+- Additive: both are new words, so existing songs compile to the same frames and keep the same
+  AST (the flags appear in it only when given).
+
 ## 4.6.0
 
 **A gate table and `hardRestart` on one instrument.** A percussive sound that toggles its gate

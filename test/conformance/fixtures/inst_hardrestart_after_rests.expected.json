@@ -1,0 +1,81 @@
+{
+  "ok": true,
+  "ast": {
+    "type": "Program",
+    "statements": [
+      {
+        "type": "TempoStmt",
+        "line": 1,
+        "unit": "framesPerBeat",
+        "value": {
+          "kind": "number",
+          "value": 6
+        },
+        "beats": 4,
+        "offset": null,
+        "meter": null
+      },
+      {
+        "type": "InstrumentBlock",
+        "line": 3,
+        "name": "hat",
+        "fields": [
+          {
+            "type": "wave",
+            "line": 4,
+            "tokens": [
+              "noise"
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "gate",
+            "line": 5,
+            "tokens": [
+              {
+                "repeat": 1,
+                "count": 2
+              },
+              0
+            ],
+            "speed": null,
+            "delay": null
+          },
+          {
+            "type": "gate",
+            "line": 6,
+            "value": -2,
+            "hardRestart": {
+              "ad": null,
+              "sr": [
+                0,
+                0
+              ],
+              "test": false,
+              "beforeNotes": false,
+              "afterRests": true,
+              "presetRelease": true
+            }
+          }
+        ]
+      },
+      {
+        "type": "VoiceStmt",
+        "mode": "short",
+        "line": 9,
+        "index": 0,
+        "instrumentName": "hat",
+        "notes": {
+          "isSigil": false,
+          "source": "c4 ~ c4 c4",
+          "docStart": 124,
+          "docEnd": 134
+        },
+        "arrangement": null,
+        "inlineAttrs": [],
+        "transforms": []
+      }
+    ]
+  }
+}

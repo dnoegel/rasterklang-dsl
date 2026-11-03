@@ -563,25 +563,31 @@ func (v *visitor) buildInstrumentBlock(ctx gen.IInstrumentBlockContext) *Instrum
 
 // parseHardRestartClauses reads the clauses after `hardRestart N` (ADR 0005
 // D4, ADR 0006 D5): `ad A D` and `sr S R` (nibbles) and the bare flags `test`
-// and `beforeNotes`, in any order, each at most once. Mirrors astVisitor.js's
+// and `beforeNotes` (and since DSL 4.7.0 `afterRests` and `presetRelease`),
+// in any order, each at most once. Mirrors astVisitor.js's
 // parseHardRestartClauses.
 func parseHardRestartClauses(tokens []TableValue, line int) *HardRestartSpec {
 	out := &HardRestartSpec{}
 	seen := map[string]bool{}
 	for i := 0; i < len(tokens); {
 		word, ok := tableValueAsWord(tokens[i])
-		if !ok || (word != "ad" && word != "sr" && word != "test" && word != "beforeNotes") {
-			fail(line, "'hardRestart' clauses are 'ad A D', 'sr S R', 'test' and 'beforeNotes', found %v", tableValueText(tokens[i]))
+		if !ok || (word != "ad" && word != "sr" && word != "test" && word != "beforeNotes" && word != "afterRests" && word != "presetRelease") {
+			fail(line, "'hardRestart' clauses are 'ad A D', 'sr S R', 'test', 'beforeNotes', 'afterRests' and 'presetRelease', found %v", tableValueText(tokens[i]))
 		}
 		if seen[word] {
 			fail(line, "'hardRestart' has '%s' twice", word)
 		}
 		seen[word] = true
-		if word == "test" || word == "beforeNotes" {
-			if word == "test" {
+		if word != "ad" && word != "sr" {
+			switch word {
+			case "test":
 				out.Test = true
-			} else {
+			case "beforeNotes":
 				out.BeforeNotes = true
+			case "afterRests":
+				out.AfterRests = true
+			case "presetRelease":
+				out.PresetRelease = true
 			}
 			i++
 			continue

@@ -333,6 +333,9 @@ type HardRestartSpec struct {
 	AD, SR      *[2]int
 	Test        bool
 	BeforeNotes bool
+	// DSL 4.7.0
+	AfterRests    bool
+	PresetRelease bool
 }
 
 // === voice_stmt ==============================================================

@@ -193,6 +193,7 @@ instrument_field:= 'wave' table_row
                                                 ;   `hardRestart INT` may both be given (any order)
 
 hr_clause       := 'ad' INT INT | 'sr' INT INT | 'test' | 'beforeNotes'
+                 | 'afterRests' | 'presetRelease'           ; 4.7.0
                                                 ; any order, each at most once
 
 loop_pair       := ('wave'|'pw'|'arp'|'filterTable'|'test'|'gate') INT
@@ -872,6 +873,15 @@ appear to phase-drift against the song instead of restarting fresh on every note
   gate closes and the clauses are written, by the same rules as above (not before a tie or
   legato transition; before a rest only without `beforeNotes`, and without the clauses). Every
   other pair of gate fields is still an error.
+  Two clauses since `4.7.0` deal with the SID's ADSR delay bug (the envelope rate counter has to
+  wrap around, up to 32768 cycles, when it is switched to a faster rate whose period it has
+  already passed, so an attack or release can start up to about 1.7 frames late): `afterRests`
+  also opens the restart window in the last N frames of a rest before a note whose
+  instrument has the clause (its N and clauses, looking up to 8 frames ahead), and `presetRelease` writes the release rate into the
+  decay nibble in the 2 frames before the gate closes, so the counter wraps while the envelope
+  still holds and the release starts on time. It applies only when the release is faster than
+  the decay, the gate is open through both frames, and the note's gate table has not already
+  closed the gate once.
 
 **Articulation defaults (why a `gate` is needed at all).** With no `gate` field, a note holds the
 gate high for its whole slot, so a run of consecutive notes is one continuous gate-high run: the

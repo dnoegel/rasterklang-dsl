@@ -526,5 +526,13 @@ func canonHardRestart(h *dsl.HardRestartSpec) map[string]any {
 		}
 		return []any{float64(p[0]), float64(p[1])}
 	}
-	return map[string]any{"ad": pair(h.AD), "sr": pair(h.SR), "test": h.Test, "beforeNotes": h.BeforeNotes}
+	out := map[string]any{"ad": pair(h.AD), "sr": pair(h.SR), "test": h.Test, "beforeNotes": h.BeforeNotes}
+	// DSL 4.7.0: keys only when given, as in astVisitor.js
+	if h.AfterRests {
+		out["afterRests"] = true
+	}
+	if h.PresetRelease {
+		out["presetRelease"] = true
+	}
+	return out
 }

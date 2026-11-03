@@ -100,3 +100,79 @@ describe('gate table plus hardRestart', () => {
     expect(() => compileDslV2Source(song(['gate 1 0', 'hardRestart 1', 'hardRestart 2'], 'c4'))).toThrow(/already has a 'gate'/);
   });
 });
+
+// DSL 4.7.0: `afterRests` opens the restart window at the end of a rest
+// before a note too; `presetRelease` puts the release rate into the decay
+// nibble for the 2 frames before the gate closes (the SID's rate counter
+// then wraps while the envelope holds, so the release starts on time).
+describe('hardRestart afterRests and presetRelease', () => {
+  it('afterRests writes the clauses in the last N frames of a rest before a note', () => {
+    const plain = registerFrames(song(['gate 1!4', 'hardRestart 1 ad 0 0 sr 0 0'], 'c4 ~ e4 g4'), 8);
+    const after = registerFrames(song(['gate 1!4', 'hardRestart 1 ad 0 0 sr 0 0 afterRests'], 'c4 ~ e4 g4'), 8);
+    expect(plain.map(sr)).toEqual([0x34, 0x34, 0x34, 0x34, 0x34, 0x34, 0x34, 0x34]);
+    expect(after.map(sr)).toEqual([0x34, 0x34, 0x34, 0x34, 0x34, 0x34, 0x34, 0x00]);
+    expect(after.map(ad)).toEqual([0x12, 0x12, 0x12, 0x12, 0x12, 0x12, 0x12, 0x00]);
+    expect(after.map(gate)).toEqual(plain.map(gate));
+  });
+
+  it('afterRests also works without a gate table and with a longer window', () => {
+    const frames = registerFrames(song(['hardRestart 2 sr 0 0 afterRests'], 'c4 ~ ~ e4'), 13);
+    expect(frames.map(sr)).toEqual([0x34, 0x34, 0x34, 0x34, 0x34, 0x34, 0x34, 0x34, 0x34, 0x34, 0x00, 0x00, 0x34]);
+  });
+
+  // decay 9, release 4: a release faster than the decay, where the delay bug bites
+  const fastRelease = (fields, notes) => song(fields, notes).replace('adsr 1 2 3 4', 'adsr 1 9 3 4');
+  it('presetRelease writes the release rate as decay in the 2 frames before the gate closes', () => {
+    const frames = registerFrames(fastRelease(['hardRestart 1 presetRelease'], 'c4 _ e4 ~'), 16);
+    // c4 is held 8 frames, its gate closes on frame 7 (hardRestart 1)
+    expect(frames.map(ad).slice(0, 8)).toEqual([0x19, 0x19, 0x19, 0x19, 0x19, 0x14, 0x14, 0x19]);
+    // e4 runs into a rest: without beforeNotes its gate closes on frame 11
+    expect(frames.map(ad).slice(8, 16)).toEqual([0x19, 0x14, 0x14, 0x19, 0x19, 0x19, 0x19, 0x19]);
+    expect(frames.map(gate)).toEqual([1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0]);
+  });
+
+  it('presetRelease with beforeNotes: the gate closes when the rest begins', () => {
+    const frames = registerFrames(fastRelease(['hardRestart 1 presetRelease beforeNotes'], 'c4 ~ e4 g4'), 4);
+    expect(frames.map(ad)).toEqual([0x19, 0x19, 0x14, 0x14]);
+  });
+
+  it('presetRelease follows a gate table closing the gate mid-note', () => {
+    const frames = registerFrames(fastRelease(['gate 1!3 0', 'hardRestart 1 presetRelease'], 'c4 e4 g4 c5'), 4);
+    expect(frames.map(ad)).toEqual([0x19, 0x14, 0x14, 0x19]);
+  });
+
+  it('presetRelease leaves a release slower than the decay alone', () => {
+    const frames = registerFrames(song(['hardRestart 1 presetRelease'], 'c4 e4 g4 c5'), 8);
+    expect(frames.every((f) => ad(f) === 0x12)).toBe(true);
+  });
+
+  it('existing songs without the clauses compile as before', () => {
+    const a = registerFrames(song(['gate 1 0 1 1', 'hardRestart 1 ad 0 0'], 'c4 ~ g4 c5'), 16);
+    const b = registerFrames(song(['hardRestart 1 ad 0 0', 'gate 1 0 1 1'], 'c4 ~ g4 c5'), 16);
+    expect(a).toEqual(b);
+  });
+
+  it('rejects a repeated or unknown clause', () => {
+    expect(() => compileDslV2Source(song(['hardRestart 1 afterRests afterRests'], 'c4'))).toThrow(/'afterRests' twice/);
+    expect(() => compileDslV2Source(song(['hardRestart 1 afterNotes'], 'c4'))).toThrow(/'afterRests' and 'presetRelease'/);
+  });
+});
+
+describe('presetRelease and a pulsing gate table', () => {
+  it('leaves a gate that opens again within the note alone', () => {
+    // decay 9, release 0; the table pulses the gate open again after it closes
+    const src = song(['gate 1 1 0 1 1 0', 'hardRestart 1 presetRelease'], 'c4 e4').replace('adsr 1 2 3 4', 'adsr 0 9 8 0');
+    const frames = registerFrames(src, 8);
+    expect(frames.map(gate)).toEqual([1, 1, 0, 1, 1, 0, 1, 0]);
+    // frames 3-4 close at 5 but the gate opens again at 6; the restart at 7
+    // follows a single open frame
+    expect(frames.every((f) => ad(f) === 0x09)).toBe(true);
+  });
+
+  it('leaves a note alone once its gate table has closed and reopened the gate', () => {
+    const src = song(['gate 1 0 1', 'loop gate 2', 'hardRestart 1 presetRelease'], 'c4 e4').replace('adsr 1 2 3 4', 'adsr 0 9 8 0');
+    const frames = registerFrames(src, 8);
+    expect(frames.map(gate)).toEqual([1, 0, 1, 1, 1, 1, 1, 0]);
+    expect(frames.every((f) => ad(f) === 0x09)).toBe(true);
+  });
+});

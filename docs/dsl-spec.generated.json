@@ -1,5 +1,5 @@
 {
-  "dslVersion": "4.6.0",
+  "dslVersion": "4.7.0",
   "generatedBy": "scripts/generate-dsl-spec.mjs",
   "sources": [
     "src/dsl/parser.js",
@@ -133,8 +133,8 @@
     },
     {
       "name": "hardRestart",
-      "signature": "hardRestart FRAMES [ad A D] [sr S R] [test] [beforeNotes]",
-      "description": "The readable spelling of `gate -FRAMES` (ADR 0003 D11): drops the gate for the note's last FRAMES frames so the NEXT note gets a genuine, frame-observable low-to-high edge (a real SID hard restart), whatever the note's own length. Compiles to exactly the same AST shape `gate -N` does - a spelling, not a second mechanism. The optional clauses (ADR 0005 D4, any order) apply during those frames when another note follows directly: `ad A D` and `sr S R` write that envelope instead of the instrument's (the classic AD/SR reset before the next attack), `test` sets the test bit. Before a rest the note releases normally. `beforeNotes` (ADR 0006 D5) drops the early release itself before a rest, so a key-off releases at the rest and only a following note gets the restart. Never releases early into a legato transition (a tie, `fx tp`, `slideTo`). Since 4.6.0 it combines with a gate TABLE (`gate 1!2 0`): the table runs as before and the last FRAMES frames before a following note close the gate and write the clauses. Any other second `gate`/`hardRestart` field is an error.",
+      "signature": "hardRestart FRAMES [ad A D] [sr S R] [test] [beforeNotes] [afterRests] [presetRelease]",
+      "description": "The readable spelling of `gate -FRAMES` (ADR 0003 D11): drops the gate for the note's last FRAMES frames so the NEXT note gets a genuine, frame-observable low-to-high edge (a real SID hard restart), whatever the note's own length. Compiles to exactly the same AST shape `gate -N` does - a spelling, not a second mechanism. The optional clauses (ADR 0005 D4, any order) apply during those frames when another note follows directly: `ad A D` and `sr S R` write that envelope instead of the instrument's (the classic AD/SR reset before the next attack), `test` sets the test bit. Before a rest the note releases normally. `beforeNotes` (ADR 0006 D5) drops the early release itself before a rest, so a key-off releases at the rest and only a following note gets the restart. Never releases early into a legato transition (a tie, `fx tp`, `slideTo`). `afterRests` (4.7.0) also opens the window in the last FRAMES frames of a rest before a note whose instrument has the clause (its FRAMES and clauses); `presetRelease` (4.7.0) writes the release rate into the decay nibble for the 2 frames before the gate closes, so on a real SID the release starts on time instead of up to 1.7 frames late (the ADSR delay bug); only when the release is faster than the decay, the gate is open through both frames and the note's gate table has not closed the gate before. Since 4.6.0 it combines with a gate TABLE (`gate 1!2 0`): the table runs as before and the last FRAMES frames before a following note close the gate and write the clauses. Any other second `gate`/`hardRestart` field is an error.",
       "example": "hardRestart 2 ad 0 0 sr 0 0"
     }
   ],

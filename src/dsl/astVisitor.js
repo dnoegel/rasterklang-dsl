@@ -594,19 +594,22 @@ function buildInstrumentField(ctx) {
 // parseHardRestartClauses(tokens, line) -> { ad, sr, test, beforeNotes } for
 // the clauses after `hardRestart N` (ADR 0005 D4, ADR 0006 D5): `ad A D` and
 // `sr S R` (nibbles, null when absent) and the bare flags `test` and
-// `beforeNotes`, in any order, each at most once.
+// `beforeNotes`, in any order, each at most once. The flags `afterRests` and
+// `presetRelease` (DSL 4.7.0) appear as keys only when given, so the AST of
+// every older song stays the same.
+const HARD_RESTART_CLAUSES = ['ad', 'sr', 'test', 'beforeNotes', 'afterRests', 'presetRelease'];
 function parseHardRestartClauses(tokens, line) {
   const out = { ad: null, sr: null, test: false, beforeNotes: false };
   const seen = new Set();
   let i = 0;
   while (i < tokens.length) {
     const word = tokens[i];
-    if (word !== 'ad' && word !== 'sr' && word !== 'test' && word !== 'beforeNotes') {
-      fail(line, `'hardRestart' clauses are 'ad A D', 'sr S R', 'test' and 'beforeNotes', found ${JSON.stringify(word)}`);
+    if (!HARD_RESTART_CLAUSES.includes(word)) {
+      fail(line, `'hardRestart' clauses are 'ad A D', 'sr S R', 'test', 'beforeNotes', 'afterRests' and 'presetRelease', found ${JSON.stringify(word)}`);
     }
     if (seen.has(word)) fail(line, `'hardRestart' has '${word}' twice`);
     seen.add(word);
-    if (word === 'test' || word === 'beforeNotes') {
+    if (word !== 'ad' && word !== 'sr') {
       out[word] = true;
       i += 1;
       continue;
