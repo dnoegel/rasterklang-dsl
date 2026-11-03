@@ -14,6 +14,20 @@ bumps the version.
 Several entries mention a GoatTracker-to-DSL converter. The converter is a separate tool; it is
 mentioned here only where its needs motivated a grammar change.
 
+## 4.6.0
+
+**A gate table and `hardRestart` on one instrument.** A percussive sound that toggles its gate
+with a table (`gate 1!2 0`) could not also hard-restart, so on an accurate SID (the ADSR delay
+bug) a slow release could swallow the next short note.
+
+- An instrument may give a gate table plus `hardRestart N [clauses]` (or `gate -N`), in either
+  order. The table runs as before; in the note's last N frames before a following note the gate
+  closes and the `ad`/`sr`/`test` clauses are written. Not before a tie or a legato transition;
+  before a rest the gate closes without the clauses, and with `beforeNotes` not at all.
+- Additive: the pair was an error before, so existing songs compile to the same frames. Every
+  other pair of gate fields is still an error. The AST is unchanged (the instrument model gets
+  `gateTableRestart`).
+
 ## 4.5.0
 
 **Flats spelled with `b`, and two silent failures made loud.** Found while shortening the Deep Dub

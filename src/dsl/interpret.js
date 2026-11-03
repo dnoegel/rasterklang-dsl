@@ -631,6 +631,8 @@ function buildInstrumentFromBlockFields(fields, tables) {
   // gateReleaseFrames, silently discarding an earlier `gate 0.5`), so a
   // repeat is always a mistake.
   let gateFieldLine = null;
+  let gateFieldKind = null;
+  let gateFieldValue = null;
   const impliedLoop = {};
   // ADR 0003 D13: a verb block's own loop point, tracked SEPARATELY from
   // ramp-implied loop points (impliedLoop above) - a ramp's implicit loop
@@ -699,13 +701,34 @@ function buildInstrumentFromBlockFields(fields, tables) {
         opts.slide = { time: f.time };
         break;
       case 'gate':
+        // DSL 4.6.0: a gate TABLE and `hardRestart N` (the same as `gate -N`)
+        // may be combined: the table runs as before, and the last N frames
+        // before a following note close the gate and write the restart
+        // envelope. Every other pair is still rejected.
+        const isRestart = (x) => !x.tokens && !x.mode && typeof x.value === 'number' && x.value < 0;
         if (gateFieldLine != null) {
-          throw new Error(
-            `line ${f.line}: this instrument already has a 'gate' (or 'hardRestart') field on line ${gateFieldLine} - ` +
-              `gate's value/mode/table shapes have no defined combination, so give it once.`,
-          );
+          const tableAndRestart = (f.tokens && gateFieldKind === 'restart') || (isRestart(f) && gateFieldKind === 'table');
+          if (!tableAndRestart) {
+            throw new Error(
+              `line ${f.line}: this instrument already has a 'gate' (or 'hardRestart') field on line ${gateFieldLine} - ` +
+                `gate's value/mode/table shapes have no defined combination, so give it once (only a gate table plus 'hardRestart N' combine).`,
+            );
+          }
+          if (f.tokens) {
+            opts.gateTable = f.tokens;
+          } else {
+            opts.gateTableRestart = -f.value;
+            if (f.hardRestart) opts.hardRestart = f.hardRestart;
+          }
+          // the restart frames apply to the table, not as a gate value
+          delete opts.gate;
+          if (opts.gateTable && opts.gateTableRestart == null) opts.gateTableRestart = -gateFieldValue;
+          gateFieldKind = 'both';
+          break;
         }
         gateFieldLine = f.line;
+        gateFieldKind = f.tokens ? 'table' : isRestart(f) ? 'restart' : 'other';
+        gateFieldValue = f.value;
         // Single value (f.value) = a static fraction (or a negative
         // hardRestart-style frame count); tokens (f.tokens, 2+) = the
         // per-frame gate-bit table; f.mode (ADR 0003 D11) = 'legato' or

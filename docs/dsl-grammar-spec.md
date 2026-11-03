@@ -188,7 +188,9 @@ instrument_field:= 'wave' table_row
                                                 ;   frames at the note's END (GoatTracker's gatetimer/hard restart);
                                                 ;   table_row = per-frame gate-bit program
                   | 'hardRestart' INT hr_clause* ; = gate -INT, plus (4.3.0, ADR 0005 D4) what the
-                                                ;   restart frames write before a following note
+                                                ;   restart frames write before a following note.
+                                                ;   4.6.0: a gate table_row plus one `gate -INT` /
+                                                ;   `hardRestart INT` may both be given (any order)
 
 hr_clause       := 'ad' INT INT | 'sr' INT INT | 'test' | 'beforeNotes'
                                                 ; any order, each at most once
@@ -865,6 +867,11 @@ appear to phase-drift against the song instead of restarting fresh on every note
   ADR 0006 D5) keeps the early release for notes only: before a rest (a key-off) the gate stays
   open until the rest begins, as DMC's "release one tick before the next note" flag does.
   `hardRestart` never releases early into a legato transition (a tie, `fx tp`, `slideTo`).
+  Since `4.6.0` an instrument may give a gate table AND `hardRestart N` (or `gate -N`), in any
+  order: the table runs as before, and in the note's last N frames before a following note the
+  gate closes and the clauses are written, by the same rules as above (not before a tie or
+  legato transition; before a rest only without `beforeNotes`, and without the clauses). Every
+  other pair of gate fields is still an error.
 
 **Articulation defaults (why a `gate` is needed at all).** With no `gate` field, a note holds the
 gate high for its whole slot, so a run of consecutive notes is one continuous gate-high run: the

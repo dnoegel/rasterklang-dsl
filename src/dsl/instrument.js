@@ -71,6 +71,7 @@ export function instrument({
   speed = null,
   gateMode = null,
   hardRestart = null,
+  gateTableRestart = null,
 } = {}) {
   // normalizeTable: an empty array is treated the same as "field never set"
   // (null) - so every call site downstream (compile.js's `inst.wave` etc.)
@@ -173,5 +174,9 @@ export function instrument({
     // guarantee.
     gateMode: gateMode === 'legato' || gateMode === 'retrigger' ? gateMode : null,
     hardRestart: normalizeHardRestart(hardRestart),
+    // DSL 4.6.0: `hardRestart N` next to a gate table - the N frames before a
+    // following note in which compile.js closes the gate (and writes the
+    // hardRestart clauses) on top of the table. null without a gate table.
+    gateTableRestart: Number.isInteger(gateTableRestart) && gateTableRestart > 0 && normalizeTable(gateTable) ? gateTableRestart : null,
   };
 }

@@ -5,4 +5,4 @@
 //
 // Anything that stores DSL text (generated corpora, saved songs) can record
 // this so it stays readable as the language evolves.
-export const DSL_VERSION = '4.5.0';
+export const DSL_VERSION = '4.6.0';
